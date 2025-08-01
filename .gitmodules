@@ -1,0 +1,6 @@
+[submodule "genproto"]
+	path = genproto
+	url = https://github.com/YenXXXW/clipboradSyncProto.git
+[submodule "protobuf"]
+	path = protobuf
+	url = https://github.com/YenXXXW/clipboradSyncProto.git
