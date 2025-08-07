@@ -32,8 +32,8 @@ const (
 type ClipSyncServiceClient interface {
 	CreateRoom(ctx context.Context, in *CreateRoomRequest, opts ...grpc.CallOption) (*CreateRoomResponse, error)
 	LeaveRoom(ctx context.Context, in *LeaveRoomRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	SubscribeClipboardContentUpdate(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[ClipboardContent], error)
-	SendClipboardUpdate(ctx context.Context, in *ClipboardUpdateRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SubscribeClipboardContentUpdate(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[ClipboardUpdate], error)
+	SendClipboardUpdate(ctx context.Context, in *ClipboardUpdate, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type clipSyncServiceClient struct {
@@ -64,13 +64,13 @@ func (c *clipSyncServiceClient) LeaveRoom(ctx context.Context, in *LeaveRoomRequ
 	return out, nil
 }
 
-func (c *clipSyncServiceClient) SubscribeClipboardContentUpdate(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[ClipboardContent], error) {
+func (c *clipSyncServiceClient) SubscribeClipboardContentUpdate(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[ClipboardUpdate], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &ClipSyncService_ServiceDesc.Streams[0], ClipSyncService_SubscribeClipboardContentUpdate_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[SubscribeRequest, ClipboardContent]{ClientStream: stream}
+	x := &grpc.GenericClientStream[SubscribeRequest, ClipboardUpdate]{ClientStream: stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -81,9 +81,9 @@ func (c *clipSyncServiceClient) SubscribeClipboardContentUpdate(ctx context.Cont
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type ClipSyncService_SubscribeClipboardContentUpdateClient = grpc.ServerStreamingClient[ClipboardContent]
+type ClipSyncService_SubscribeClipboardContentUpdateClient = grpc.ServerStreamingClient[ClipboardUpdate]
 
-func (c *clipSyncServiceClient) SendClipboardUpdate(ctx context.Context, in *ClipboardUpdateRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *clipSyncServiceClient) SendClipboardUpdate(ctx context.Context, in *ClipboardUpdate, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, ClipSyncService_SendClipboardUpdate_FullMethodName, in, out, cOpts...)
@@ -99,8 +99,8 @@ func (c *clipSyncServiceClient) SendClipboardUpdate(ctx context.Context, in *Cli
 type ClipSyncServiceServer interface {
 	CreateRoom(context.Context, *CreateRoomRequest) (*CreateRoomResponse, error)
 	LeaveRoom(context.Context, *LeaveRoomRequest) (*emptypb.Empty, error)
-	SubscribeClipboardContentUpdate(*SubscribeRequest, grpc.ServerStreamingServer[ClipboardContent]) error
-	SendClipboardUpdate(context.Context, *ClipboardUpdateRequest) (*emptypb.Empty, error)
+	SubscribeClipboardContentUpdate(*SubscribeRequest, grpc.ServerStreamingServer[ClipboardUpdate]) error
+	SendClipboardUpdate(context.Context, *ClipboardUpdate) (*emptypb.Empty, error)
 	mustEmbedUnimplementedClipSyncServiceServer()
 }
 
@@ -117,10 +117,10 @@ func (UnimplementedClipSyncServiceServer) CreateRoom(context.Context, *CreateRoo
 func (UnimplementedClipSyncServiceServer) LeaveRoom(context.Context, *LeaveRoomRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LeaveRoom not implemented")
 }
-func (UnimplementedClipSyncServiceServer) SubscribeClipboardContentUpdate(*SubscribeRequest, grpc.ServerStreamingServer[ClipboardContent]) error {
+func (UnimplementedClipSyncServiceServer) SubscribeClipboardContentUpdate(*SubscribeRequest, grpc.ServerStreamingServer[ClipboardUpdate]) error {
 	return status.Errorf(codes.Unimplemented, "method SubscribeClipboardContentUpdate not implemented")
 }
-func (UnimplementedClipSyncServiceServer) SendClipboardUpdate(context.Context, *ClipboardUpdateRequest) (*emptypb.Empty, error) {
+func (UnimplementedClipSyncServiceServer) SendClipboardUpdate(context.Context, *ClipboardUpdate) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendClipboardUpdate not implemented")
 }
 func (UnimplementedClipSyncServiceServer) mustEmbedUnimplementedClipSyncServiceServer() {}
@@ -185,14 +185,14 @@ func _ClipSyncService_SubscribeClipboardContentUpdate_Handler(srv interface{}, s
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ClipSyncServiceServer).SubscribeClipboardContentUpdate(m, &grpc.GenericServerStream[SubscribeRequest, ClipboardContent]{ServerStream: stream})
+	return srv.(ClipSyncServiceServer).SubscribeClipboardContentUpdate(m, &grpc.GenericServerStream[SubscribeRequest, ClipboardUpdate]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type ClipSyncService_SubscribeClipboardContentUpdateServer = grpc.ServerStreamingServer[ClipboardContent]
+type ClipSyncService_SubscribeClipboardContentUpdateServer = grpc.ServerStreamingServer[ClipboardUpdate]
 
 func _ClipSyncService_SendClipboardUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ClipboardUpdateRequest)
+	in := new(ClipboardUpdate)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -204,7 +204,7 @@ func _ClipSyncService_SendClipboardUpdate_Handler(srv interface{}, ctx context.C
 		FullMethod: ClipSyncService_SendClipboardUpdate_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClipSyncServiceServer).SendClipboardUpdate(ctx, req.(*ClipboardUpdateRequest))
+		return srv.(ClipSyncServiceServer).SendClipboardUpdate(ctx, req.(*ClipboardUpdate))
 	}
 	return interceptor(ctx, in, info, handler)
 }

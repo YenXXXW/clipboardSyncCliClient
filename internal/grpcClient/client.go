@@ -4,36 +4,38 @@ import (
 	"context"
 	"io"
 	"log"
-	"time"
 
 	pb "github.com/YenXXXW/clipboardSyncCliClient/genproto/clipboardSync"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-type clipboardGrpcCleint struct {
+type clipboardGrpcClient struct {
 	client pb.ClipSyncServiceClient
 }
 
-func NewGrpcClient(addr string) *grpc.ClientConn {
+func NewGrpcClient(addr string) *clipboardGrpcClient {
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("did nto connect %v", err)
 	}
-	return conn
+
+	c := pb.NewClipSyncServiceClient(conn)
+	clipboardClient := &clipboardGrpcClient{
+		client: c,
+	}
+	return clipboardClient
 }
 
-func (c *clipboardGrpcCleint) SendUpdate(content string, conn *grpc.ClientConn) error {
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
+func (c *clipboardGrpcClient) SendUpdate(ctx context.Context, deviceId, content string) error {
 
 	reqContent := &pb.ClipboardContent{
 		Text: content,
 	}
 
-	req := &pb.ClipboardUpdateRequest{
-		Content: reqContent,
+	req := &pb.ClipboardUpdate{
+		Content:  reqContent,
+		DeviceId: deviceId,
 	}
 
 	if _, err := c.client.SendClipboardUpdate(ctx, req); err != nil {
@@ -44,10 +46,7 @@ func (c *clipboardGrpcCleint) SendUpdate(content string, conn *grpc.ClientConn) 
 
 }
 
-func (c *clipboardGrpcCleint) ReceiveUpdateAndSync(deviceId, roomId string) error {
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
+func (c *clipboardGrpcClient) ReceiveUpdateAndSync(ctx context.Context, deviceId, roomId string, updateChan chan *pb.ClipboardUpdate) error {
 
 	req := &pb.SubscribeRequest{
 		DeviceId: deviceId,
@@ -59,16 +58,58 @@ func (c *clipboardGrpcCleint) ReceiveUpdateAndSync(deviceId, roomId string) erro
 		return err
 	}
 
-	for {
-		resp, err := stream.Recv()
-		if err == io.EOF {
-			log.Println("End of stream")
-			break
+	go func() {
+		defer close(updateChan)
+
+		for {
+			resp, err := stream.Recv()
+			if err == io.EOF {
+				log.Println("End of stream")
+				break
+			}
+			if err != nil {
+				log.Fatalf("error receiving from stream: %v", err)
+				return
+			}
+
+			select {
+			case updateChan <- resp:
+			case <-ctx.Done():
+				log.Println("Context cancelled while sending update")
+				return
+
+			}
 		}
-		if err != nil {
-			log.Fatalf("error receiving from stream: %v", err)
-		}
-		log.Printf("Received data: %s", resp.GetText())
+	}()
+
+	return nil
+
+}
+
+func (c *clipboardGrpcClient) CreateRoom(ctx context.Context, deviceId string) (string, error) {
+	req := &pb.CreateRoomRequest{
+		DeviceId: deviceId,
+	}
+
+	res, err := c.client.CreateRoom(ctx, req)
+	log.Printf("Error creating room %v", err)
+	if err != nil {
+		return "", err
+	}
+
+	return res.GetRoomId(), nil
+
+}
+
+func (c *clipboardGrpcClient) LeaveRoom(ctx context.Context, deviceId, roomId string) error {
+	req := &pb.LeaveRoomRequest{
+		DeviceId: deviceId,
+		RoomId:   roomId,
+	}
+
+	if _, err := c.client.LeaveRoom(ctx, req); err != nil {
+		log.Printf("Error leaving room %v", err)
+		return err
 	}
 
 	return nil

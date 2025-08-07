@@ -66,7 +66,7 @@ func (x *ClipboardContent) GetText() string {
 	return ""
 }
 
-type ClipboardUpdateRequest struct {
+type ClipboardUpdate struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	DeviceId      string                 `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
 	Content       *ClipboardContent      `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
@@ -74,20 +74,20 @@ type ClipboardUpdateRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ClipboardUpdateRequest) Reset() {
-	*x = ClipboardUpdateRequest{}
+func (x *ClipboardUpdate) Reset() {
+	*x = ClipboardUpdate{}
 	mi := &file_clipBoardSync_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ClipboardUpdateRequest) String() string {
+func (x *ClipboardUpdate) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ClipboardUpdateRequest) ProtoMessage() {}
+func (*ClipboardUpdate) ProtoMessage() {}
 
-func (x *ClipboardUpdateRequest) ProtoReflect() protoreflect.Message {
+func (x *ClipboardUpdate) ProtoReflect() protoreflect.Message {
 	mi := &file_clipBoardSync_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -99,19 +99,19 @@ func (x *ClipboardUpdateRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ClipboardUpdateRequest.ProtoReflect.Descriptor instead.
-func (*ClipboardUpdateRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ClipboardUpdate.ProtoReflect.Descriptor instead.
+func (*ClipboardUpdate) Descriptor() ([]byte, []int) {
 	return file_clipBoardSync_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *ClipboardUpdateRequest) GetDeviceId() string {
+func (x *ClipboardUpdate) GetDeviceId() string {
 	if x != nil {
 		return x.DeviceId
 	}
 	return ""
 }
 
-func (x *ClipboardUpdateRequest) GetContent() *ClipboardContent {
+func (x *ClipboardUpdate) GetContent() *ClipboardContent {
 	if x != nil {
 		return x.Content
 	}
@@ -316,8 +316,8 @@ const file_clipBoardSync_proto_rawDesc = "" +
 	"\n" +
 	"\x13clipBoardSync.proto\x1a\x1bgoogle/protobuf/empty.proto\"&\n" +
 	"\x10ClipboardContent\x12\x12\n" +
-	"\x04text\x18\x01 \x01(\tR\x04text\"b\n" +
-	"\x16ClipboardUpdateRequest\x12\x1b\n" +
+	"\x04text\x18\x01 \x01(\tR\x04text\"[\n" +
+	"\x0fClipboardUpdate\x12\x1b\n" +
 	"\tdevice_id\x18\x01 \x01(\tR\bdeviceId\x12+\n" +
 	"\acontent\x18\x02 \x01(\v2\x11.ClipboardContentR\acontent\"H\n" +
 	"\x10SubscribeRequest\x12\x1b\n" +
@@ -329,13 +329,13 @@ const file_clipBoardSync_proto_rawDesc = "" +
 	"\aroom_id\x18\x01 \x01(\tR\x06roomId\"H\n" +
 	"\x10LeaveRoomRequest\x12\x1b\n" +
 	"\tdevice_id\x18\x01 \x01(\tR\bdeviceId\x12\x17\n" +
-	"\aroom_id\x18\x02 \x01(\tR\x06roomId2\x93\x02\n" +
+	"\aroom_id\x18\x02 \x01(\tR\x06roomId2\x8b\x02\n" +
 	"\x0fClipSyncService\x125\n" +
 	"\n" +
 	"CreateRoom\x12\x12.CreateRoomRequest\x1a\x13.CreateRoomResponse\x126\n" +
-	"\tLeaveRoom\x12\x11.LeaveRoomRequest\x1a\x16.google.protobuf.Empty\x12I\n" +
-	"\x1fSubscribeClipboardContentUpdate\x12\x11.SubscribeRequest\x1a\x11.ClipboardContent0\x01\x12F\n" +
-	"\x13sendClipboardUpdate\x12\x17.ClipboardUpdateRequest\x1a\x16.google.protobuf.EmptyB\"Z github.com/YenXXXW/clipboardSyncb\x06proto3"
+	"\tLeaveRoom\x12\x11.LeaveRoomRequest\x1a\x16.google.protobuf.Empty\x12H\n" +
+	"\x1fSubscribeClipboardContentUpdate\x12\x11.SubscribeRequest\x1a\x10.ClipboardUpdate0\x01\x12?\n" +
+	"\x13sendClipboardUpdate\x12\x10.ClipboardUpdate\x1a\x16.google.protobuf.EmptyB\"Z github.com/YenXXXW/clipboardSyncb\x06proto3"
 
 var (
 	file_clipBoardSync_proto_rawDescOnce sync.Once
@@ -351,23 +351,23 @@ func file_clipBoardSync_proto_rawDescGZIP() []byte {
 
 var file_clipBoardSync_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_clipBoardSync_proto_goTypes = []any{
-	(*ClipboardContent)(nil),       // 0: ClipboardContent
-	(*ClipboardUpdateRequest)(nil), // 1: ClipboardUpdateRequest
-	(*SubscribeRequest)(nil),       // 2: SubscribeRequest
-	(*CreateRoomRequest)(nil),      // 3: CreateRoomRequest
-	(*CreateRoomResponse)(nil),     // 4: CreateRoomResponse
-	(*LeaveRoomRequest)(nil),       // 5: LeaveRoomRequest
-	(*emptypb.Empty)(nil),          // 6: google.protobuf.Empty
+	(*ClipboardContent)(nil),   // 0: ClipboardContent
+	(*ClipboardUpdate)(nil),    // 1: ClipboardUpdate
+	(*SubscribeRequest)(nil),   // 2: SubscribeRequest
+	(*CreateRoomRequest)(nil),  // 3: CreateRoomRequest
+	(*CreateRoomResponse)(nil), // 4: CreateRoomResponse
+	(*LeaveRoomRequest)(nil),   // 5: LeaveRoomRequest
+	(*emptypb.Empty)(nil),      // 6: google.protobuf.Empty
 }
 var file_clipBoardSync_proto_depIdxs = []int32{
-	0, // 0: ClipboardUpdateRequest.content:type_name -> ClipboardContent
+	0, // 0: ClipboardUpdate.content:type_name -> ClipboardContent
 	3, // 1: ClipSyncService.CreateRoom:input_type -> CreateRoomRequest
 	5, // 2: ClipSyncService.LeaveRoom:input_type -> LeaveRoomRequest
 	2, // 3: ClipSyncService.SubscribeClipboardContentUpdate:input_type -> SubscribeRequest
-	1, // 4: ClipSyncService.sendClipboardUpdate:input_type -> ClipboardUpdateRequest
+	1, // 4: ClipSyncService.sendClipboardUpdate:input_type -> ClipboardUpdate
 	4, // 5: ClipSyncService.CreateRoom:output_type -> CreateRoomResponse
 	6, // 6: ClipSyncService.LeaveRoom:output_type -> google.protobuf.Empty
-	0, // 7: ClipSyncService.SubscribeClipboardContentUpdate:output_type -> ClipboardContent
+	1, // 7: ClipSyncService.SubscribeClipboardContentUpdate:output_type -> ClipboardUpdate
 	6, // 8: ClipSyncService.sendClipboardUpdate:output_type -> google.protobuf.Empty
 	5, // [5:9] is the sub-list for method output_type
 	1, // [1:5] is the sub-list for method input_type

@@ -1,10 +1,14 @@
 package clipboard
 
 import (
-// pb "github.com/YenXXXW/clipboardSyncCliClient/genproto/clipboardSync"
+	"context"
+
+	pb "github.com/YenXXXW/clipboardSyncCliClient/genproto/clipboardSync"
 )
 
 type ClipboardClient interface {
-	SendUpdate(string) error
-	SubScribeUpdate(string, string) error
+	SendUpdate(context.Context, string, string) error
+	ReceiveUpdateAndSync(context.Context, string, string, chan *pb.ClipboardUpdate) error
+	LeaveRoom(context.Context, string, string) error
+	CreateRoom(context.Context, string) (string, error)
 }
