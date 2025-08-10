@@ -12,13 +12,13 @@ import (
 )
 
 type ClipSyncService struct {
-	clipClient       types.ClipboardClient
-	isSyncingInbound bool
-	incomingUpdates  chan *pb.ClipboardUpdate
-	deviceId         string
-	roomId           string
-	mutex            sync.Mutex
-	cancelStream     context.CancelFunc
+	clipClient                types.SyncClient
+	isSyncingInbound          bool
+	incomingUpdatesFromServer chan *pb.ClipboardUpdate
+	deviceId                  string
+	roomId                    string
+	mutex                     sync.Mutex
+	cancelStream              context.CancelFunc
 }
 
 func Init() {
@@ -29,15 +29,15 @@ func Init() {
 	fmt.Println("the program in working now")
 }
 
-func NewClipSyncService(clipClient types.ClipboardClient, deviceId string) *ClipSyncService {
+func NewClipSyncService(clipClient types.SyncClient, deviceId string) *ClipSyncService {
 	Init()
 
 	updateChan := make(chan *pb.ClipboardUpdate, 100)
 	return &ClipSyncService{
-		clipClient:       clipClient,
-		isSyncingInbound: false,
-		incomingUpdates:  updateChan,
-		deviceId:         deviceId,
+		clipClient:                clipClient,
+		isSyncingInbound:          false,
+		incomingUpdatesFromServer: updateChan,
+		deviceId:                  deviceId,
 	}
 }
 
@@ -71,11 +71,11 @@ func (c *ClipSyncService) SubAndSyncUpdate(ctx context.Context, roomId string) e
 	streamCtx, cancel := context.WithCancel(ctx)
 	c.cancelStream = cancel
 
-	return c.clipClient.ReceiveUpdateAndSync(streamCtx, c.deviceId, roomId, c.incomingUpdates)
+	return c.clipClient.ReceiveUpdateAndSync(streamCtx, c.deviceId, roomId, c.incomingUpdatesFromServer)
 }
 
 func (c *ClipSyncService) ProcessUpdates() {
-	for update := range c.incomingUpdates {
+	for update := range c.incomingUpdatesFromServer {
 		//process and sync the update only if update not made by the same device
 		if update.GetDeviceId() != c.deviceId {
 			clipboard.Write(clipboard.FmtText, []byte(update.GetContent().GetText()))

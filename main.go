@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/YenXXXW/clipboardSyncCliClient/internal/grpcClient"
+	infrastructure "github.com/YenXXXW/clipboardSyncCliClient/internal/infrastructure/grpcClient"
 	"github.com/YenXXXW/clipboardSyncCliClient/internal/service/cli"
 	"github.com/YenXXXW/clipboardSyncCliClient/internal/service/clipboard"
 	"github.com/YenXXXW/clipboardSyncCliClient/internal/service/command"
@@ -25,7 +25,7 @@ func main() {
 		cancel()
 	}()
 
-	grcClient := grpcClient.NewGrpcClient(":9000")
+	grcClient := infrastructure.NewGrpcClient(":9000")
 	clipSyncService := clipboard.NewClipSyncService(grcClient, uuid.NewString())
 	go clipSyncService.Watch(ctx)
 	commandService := command.NewCommandService(clipSyncService)

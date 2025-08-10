@@ -1,4 +1,4 @@
-package grpcClient
+package infrastructure
 
 import (
 	"context"
