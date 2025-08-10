@@ -9,7 +9,7 @@ import (
 
 	"github.com/YenXXXW/clipboardSyncCliClient/internal/grpcClient"
 	"github.com/YenXXXW/clipboardSyncCliClient/internal/service/cli"
-	"github.com/YenXXXW/clipboardSyncCliClient/internal/service/clipborad"
+	"github.com/YenXXXW/clipboardSyncCliClient/internal/service/clipboard"
 	"github.com/YenXXXW/clipboardSyncCliClient/internal/service/command"
 	"github.com/google/uuid"
 )
@@ -27,6 +27,7 @@ func main() {
 
 	grcClient := grpcClient.NewGrpcClient(":9000")
 	clipSyncService := clipboard.NewClipSyncService(grcClient, uuid.NewString())
+	go clipSyncService.Watch(ctx)
 	commandService := command.NewCommandService(clipSyncService)
 	cliService := cli.NewClipService()
 

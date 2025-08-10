@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/YenXXXW/clipboardSyncCliClient/internal/service/clipborad"
+	"github.com/YenXXXW/clipboardSyncCliClient/internal/service/clipboard"
 )
 
 // CommandService is responsible for parsing user commands and delegating to other services.

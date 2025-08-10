@@ -92,8 +92,8 @@ func (c *clipboardGrpcClient) CreateRoom(ctx context.Context, deviceId string) (
 	}
 
 	res, err := c.client.CreateRoom(ctx, req)
-	log.Printf("Error creating room %v", err)
 	if err != nil {
+		log.Printf("Error creating room %v", err)
 		return "", err
 	}
 

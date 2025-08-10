@@ -7,11 +7,12 @@ import (
 	"sync"
 
 	pb "github.com/YenXXXW/clipboardSyncCliClient/genproto/clipboardSync"
+	"github.com/YenXXXW/clipboardSyncCliClient/internal/types"
 	"golang.design/x/clipboard"
 )
 
 type ClipSyncService struct {
-	clipClient       ClipboardClient
+	clipClient       types.ClipboardClient
 	isSyncingInbound bool
 	incomingUpdates  chan *pb.ClipboardUpdate
 	deviceId         string
@@ -28,7 +29,7 @@ func Init() {
 	fmt.Println("the program in working now")
 }
 
-func NewClipSyncService(clipClient ClipboardClient, deviceId string) *ClipSyncService {
+func NewClipSyncService(clipClient types.ClipboardClient, deviceId string) *ClipSyncService {
 	Init()
 
 	updateChan := make(chan *pb.ClipboardUpdate, 100)
@@ -40,8 +41,8 @@ func NewClipSyncService(clipClient ClipboardClient, deviceId string) *ClipSyncSe
 	}
 }
 
-func (c *ClipSyncService) Watch() {
-	ch := clipboard.Watch(context.TODO(), clipboard.FmtText)
+func (c *ClipSyncService) Watch(ctx context.Context) {
+	ch := clipboard.Watch(ctx, clipboard.FmtText)
 	for data := range ch {
 
 		//check if the change is initiated by the user or the program
@@ -88,6 +89,8 @@ func (c *ClipSyncService) CreateRoom(ctx context.Context) {
 		log.Printf("Error creating room %v", err)
 		return
 	}
+
+	log.Println("roomId", roomId)
 	c.roomId = roomId
 
 }

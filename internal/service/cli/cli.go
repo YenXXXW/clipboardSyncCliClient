@@ -49,7 +49,7 @@ func (s *CliService) Run(ctx context.Context, input chan<- string) {
 		for {
 			select {
 			case <-ctx.Done():
-				log.Println("cli input channel closed")
+				log.Println("the service is stopped")
 				return
 			case line, ok := <-userInput:
 				if !ok {
