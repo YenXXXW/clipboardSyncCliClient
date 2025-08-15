@@ -5,18 +5,18 @@ import (
 	"log"
 	"strings"
 
-	"github.com/YenXXXW/clipboardSyncCliClient/internal/service/clipboard"
+	syncservice "github.com/YenXXXW/clipboardSyncCliClient/internal/service/syncService"
 )
 
 // CommandService is responsible for parsing user commands and delegating to other services.
 type CommandService struct {
-	clipSyncService *clipboard.ClipSyncService
+	syncService *syncservice.SyncService
 }
 
 // NewCommandService creates a new CommandService.
-func NewCommandService(clipSyncService *clipboard.ClipSyncService) *CommandService {
+func NewCommandService(syncService *syncservice.SyncService) *CommandService {
 	return &CommandService{
-		clipSyncService: clipSyncService,
+		syncService: syncService,
 	}
 }
 
@@ -32,15 +32,15 @@ func (s *CommandService) ProcessCommand(ctx context.Context, input string) {
 
 	switch command {
 	case "/create":
-		s.clipSyncService.CreateRoom(ctx)
+		s.syncService.CreateRoom(ctx)
 	case "/leave":
-		s.clipSyncService.LeaveRoom(ctx)
+		s.syncService.LeaveRoom(ctx)
 	case "/join":
 		if len(args) < 1 {
 			log.Println("Usage: /join <room_id>")
 			return
 		}
-		s.clipSyncService.SubAndSyncUpdate(ctx, args[0])
+		s.syncService.SubAndSyncUpdate(ctx, args[0])
 	default:
 		// If it's not a command, treat it as a clipboard update.
 		log.Println("Please enter the correct command")

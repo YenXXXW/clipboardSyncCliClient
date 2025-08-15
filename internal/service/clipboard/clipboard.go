@@ -1,57 +1,51 @@
-package clipboard
+package clipboardService
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"sync"
 
 	pb "github.com/YenXXXW/clipboardSyncCliClient/genproto/clipboardSync"
+	syncservice "github.com/YenXXXW/clipboardSyncCliClient/internal/service/syncService"
 	"github.com/YenXXXW/clipboardSyncCliClient/internal/types"
-	"golang.design/x/clipboard"
 )
 
 type ClipSyncService struct {
-	clipClient                types.SyncClient
-	isSyncingInbound          bool
-	incomingUpdatesFromServer chan *pb.ClipboardUpdate
-	deviceId                  string
-	roomId                    string
-	mutex                     sync.Mutex
-	cancelStream              context.CancelFunc
+	clipClient       types.ClipClient
+	synService       syncservice.SyncService
+	isSyncingInbound bool
+	deviceId         string
+	mutex            sync.Mutex
 }
 
-func Init() {
-	err := clipboard.Init()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("the program in working now")
-}
+func NewClipSyncService(syncService syncservice.SyncService, deviceId string) *ClipSyncService {
 
-func NewClipSyncService(clipClient types.SyncClient, deviceId string) *ClipSyncService {
-	Init()
-
-	updateChan := make(chan *pb.ClipboardUpdate, 100)
 	return &ClipSyncService{
-		clipClient:                clipClient,
-		isSyncingInbound:          false,
-		incomingUpdatesFromServer: updateChan,
-		deviceId:                  deviceId,
+		synService:       syncService,
+		isSyncingInbound: false,
+		deviceId:         deviceId,
 	}
 }
 
-func (c *ClipSyncService) Watch(ctx context.Context) {
-	ch := clipboard.Watch(ctx, clipboard.FmtText)
-	for data := range ch {
+func (c *ClipSyncService) Watch(data string) {
 
-		//check if the change is initiated by the user or the program
-		if !c.isSyncingInbound {
-			c.SendUpdate(context.Background(), string(data))
+	//check if the change is initiated by the user or the program
+	if !c.isSyncingInbound {
+		if err := c.synService.SendUpdate(context.Background(), data); err != nil {
+			log.Printf("failed to send update: %v", err)
 		}
 	}
 }
 
+// Identify the changes coming from remote and apply
+func (c *ClipSyncService) ProcessUpdates(update *pb.ClipboardUpdate) {
+	//process and sync the update only if update not made by the same device
+	if update.GetDeviceId() != c.deviceId {
+		c.clipClient.ApplyUpdates(update.GetContent().GetText())
+	}
+}
+
+// Send the clipdata from local to server
 func (c *ClipSyncService) SendUpdate(ctx context.Context, content string) error {
 
 	c.mutex.Lock()
@@ -64,40 +58,5 @@ func (c *ClipSyncService) SendUpdate(ctx context.Context, content string) error 
 		c.isSyncingInbound = false
 		c.mutex.Unlock()
 	}()
-	return c.clipClient.SendUpdate(ctx, c.deviceId, content)
-}
-
-func (c *ClipSyncService) SubAndSyncUpdate(ctx context.Context, roomId string) error {
-	streamCtx, cancel := context.WithCancel(ctx)
-	c.cancelStream = cancel
-
-	return c.clipClient.ReceiveUpdateAndSync(streamCtx, c.deviceId, roomId, c.incomingUpdatesFromServer)
-}
-
-func (c *ClipSyncService) ProcessUpdates() {
-	for update := range c.incomingUpdatesFromServer {
-		//process and sync the update only if update not made by the same device
-		if update.GetDeviceId() != c.deviceId {
-			clipboard.Write(clipboard.FmtText, []byte(update.GetContent().GetText()))
-		}
-	}
-}
-
-func (c *ClipSyncService) CreateRoom(ctx context.Context) {
-	roomId, err := c.clipClient.CreateRoom(ctx, c.deviceId)
-	if err != nil {
-		log.Printf("Error creating room %v", err)
-		return
-	}
-
-	log.Println("roomId", roomId)
-	c.roomId = roomId
-
-}
-
-func (c *ClipSyncService) LeaveRoom(ctx context.Context) {
-	if c.cancelStream != nil {
-		c.cancelStream()
-	}
-	c.clipClient.LeaveRoom(ctx, c.deviceId, c.roomId)
+	return c.synService.SendUpdate(ctx, content)
 }
