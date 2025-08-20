@@ -1,0 +1,40 @@
+package cliCleint
+
+import (
+	"bufio"
+	"context"
+	"log"
+	"os"
+	"strings"
+)
+
+type CliService struct {
+}
+
+func NewClipService(ctx context.Context, input chan string) *CliService {
+
+	return &CliService{}
+}
+
+// Run starts reading user input from the command line continuously and sends it to the input channel.
+func (s *CliService) Run(ctx context.Context, input chan<- string) {
+
+	reader := bufio.NewReader(os.Stdin)
+
+	go func() {
+		defer close(input)
+		for {
+			line, err := reader.ReadString('\n')
+			if err != nil {
+				log.Printf("error reading the user input: %v", err)
+				return
+			}
+
+			select {
+			case <-ctx.Done():
+				return
+			case input <- strings.TrimSpace(line):
+			}
+		}
+	}()
+}

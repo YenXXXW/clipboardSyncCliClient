@@ -8,9 +8,9 @@ import (
 	"syscall"
 
 	infrastructure "github.com/YenXXXW/clipboardSyncCliClient/internal/infrastructure/grpcClient"
-	"github.com/YenXXXW/clipboardSyncCliClient/internal/service/cli"
-	"github.com/YenXXXW/clipboardSyncCliClient/internal/service/clipboard"
+	clipboardService "github.com/YenXXXW/clipboardSyncCliClient/internal/service/clipboard"
 	"github.com/YenXXXW/clipboardSyncCliClient/internal/service/command"
+	syncservice "github.com/YenXXXW/clipboardSyncCliClient/internal/service/syncService"
 	"github.com/google/uuid"
 )
 
@@ -25,11 +25,14 @@ func main() {
 		cancel()
 	}()
 
+	commandInput := make(chan string, 100)
+	deviceId := uuid.NewString()
+
 	grcClient := infrastructure.NewGrpcClient(":9000")
-	clipSyncService := clipboard.NewClipSyncService(grcClient, uuid.NewString())
+	clipboardService := syncservice.NewSyncService()
+	clipSyncService := clipboardService.NewClipSyncService(clipboardService, deviceId)
 	go clipSyncService.Watch(ctx)
-	commandService := command.NewCommandService(clipSyncService)
-	cliService := cli.NewClipService()
+	commandService := command.NewCommandService(commandInput, clipSyncService)
 
 	userInputChan := make(chan string, 100)
 	go cliService.Run(ctx, userInputChan)

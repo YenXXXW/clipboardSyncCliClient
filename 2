@@ -25,6 +25,7 @@ func NewCommandService(input chan string, syncService *syncservice.SyncService) 
 }
 
 // ProcessCommand parses the user input and executes the corresponding action.
+
 func (s *CommandService) ProcessCommand(ctx context.Context) {
 
 	go func() {
@@ -32,7 +33,7 @@ func (s *CommandService) ProcessCommand(ctx context.Context) {
 
 			parts := strings.Fields(commands)
 			if len(parts) == 0 {
-				continue
+				return
 			}
 
 			command := parts[0]

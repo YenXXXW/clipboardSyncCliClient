@@ -6,22 +6,21 @@ import (
 	"sync"
 
 	pb "github.com/YenXXXW/clipboardSyncCliClient/genproto/clipboardSync"
-	syncservice "github.com/YenXXXW/clipboardSyncCliClient/internal/service/syncService"
 	"github.com/YenXXXW/clipboardSyncCliClient/internal/types"
 )
 
 type ClipSyncService struct {
 	clipClient       types.ClipClient
-	synService       syncservice.SyncService
+	clipSyncService  types.ClipSyncService
 	isSyncingInbound bool
 	deviceId         string
 	mutex            sync.Mutex
 }
 
-func NewClipSyncService(syncService syncservice.SyncService, deviceId string) *ClipSyncService {
+func NewClipSyncService(clipSyncService types.ClipSyncService, deviceId string) *ClipSyncService {
 
 	return &ClipSyncService{
-		synService:       syncService,
+		clipSyncService:  clipSyncService,
 		isSyncingInbound: false,
 		deviceId:         deviceId,
 	}
@@ -31,7 +30,7 @@ func (c *ClipSyncService) Watch(data string) {
 
 	//check if the change is initiated by the user or the program
 	if !c.isSyncingInbound {
-		if err := c.synService.SendUpdate(context.Background(), data); err != nil {
+		if err := c.clipSyncService.SendUpdate(context.Background(), data); err != nil {
 			log.Printf("failed to send update: %v", err)
 		}
 	}
@@ -58,5 +57,5 @@ func (c *ClipSyncService) SendUpdate(ctx context.Context, content string) error 
 		c.isSyncingInbound = false
 		c.mutex.Unlock()
 	}()
-	return c.synService.SendUpdate(ctx, content)
+	return c.clipSyncService.SendUpdate(ctx, content)
 }
