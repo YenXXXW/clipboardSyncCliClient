@@ -5,7 +5,6 @@ import (
 	"log"
 	"sync"
 
-	pb "github.com/YenXXXW/clipboardSyncCliClient/genproto/clipboardSync"
 	"github.com/YenXXXW/clipboardSyncCliClient/internal/types"
 )
 
@@ -37,10 +36,10 @@ func (c *ClipSyncService) Watch(data string) {
 }
 
 // Identify the changes coming from remote and apply
-func (c *ClipSyncService) ProcessUpdates(update *pb.ClipboardUpdate) {
+func (c *ClipSyncService) ProcessUpdates(update *types.ClipboardUpdate) {
 	//process and sync the update only if update not made by the same device
-	if update.GetDeviceId() != c.deviceId {
-		c.clipClient.ApplyUpdates(update.GetContent().GetText())
+	if update.DeviceId != c.deviceId {
+		c.clipClient.ApplyUpdates(update.Content.Text)
 	}
 }
 

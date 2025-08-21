@@ -9,7 +9,7 @@ import (
 // intface defince by sync service for sync client to be implemented
 type SyncClient interface {
 	SendUpdate(context.Context, string, string) error
-	ReceiveUpdateAndSync(context.Context, string, string, chan *pb.ClipboardUpdate) error
+	ReceiveUpdateAndSync(context.Context, string, string, chan *ClipboardUpdate) error
 	LeaveRoom(context.Context, string, string) error
 	CreateRoom(context.Context, string) (string, error)
 }
@@ -33,4 +33,14 @@ type ClipSyncService interface {
 
 type CliClient interface {
 	Run(ctx context.Context, input chan<- string)
+}
+
+// internal type or domain type so that service does not depend on external dependencies's type
+type ClipboardContent struct {
+	Text string
+}
+
+type ClipboardUpdate struct {
+	DeviceId string
+	Content  *ClipboardContent
 }

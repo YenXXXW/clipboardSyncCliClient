@@ -6,8 +6,6 @@ import (
 
 	clipboardService "github.com/YenXXXW/clipboardSyncCliClient/internal/service/clipboard"
 	"github.com/YenXXXW/clipboardSyncCliClient/internal/types"
-
-	pb "github.com/YenXXXW/clipboardSyncCliClient/genproto/clipboardSync"
 )
 
 type SyncService struct {
@@ -16,10 +14,10 @@ type SyncService struct {
 	deviceId                  string
 	roomId                    string
 	cancelStream              context.CancelFunc
-	incomingUpdatesFromServer chan *pb.ClipboardUpdate
+	incomingUpdatesFromServer chan *types.ClipboardUpdate
 }
 
-func NewSyncService(deviceId, roomId string, syncClient types.SyncClient, incomingUpdatesFromServer chan *pb.ClipboardUpdate) *SyncService {
+func NewSyncService(deviceId, roomId string, syncClient types.SyncClient, incomingUpdatesFromServer chan *types.ClipboardUpdate) *SyncService {
 	return &SyncService{
 		syncClient:                syncClient,
 		deviceId:                  deviceId,
@@ -66,7 +64,7 @@ func (c *SyncService) SubAndSyncUpdate(ctx context.Context, roomId string) error
 					log.Println("Stopping update processor: channel closed")
 					return
 				}
-				log.Printf("Received update from server: %s", update.GetContent().GetText())
+				log.Printf("Received update from server: %s", update)
 				// Process the updates from the incomingudpates channel sent by grpc client and apply it to the clipboard
 				c.clipbaorService.ProcessUpdates(update)
 			}

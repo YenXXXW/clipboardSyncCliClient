@@ -13,6 +13,7 @@ import (
 	clipboardService "github.com/YenXXXW/clipboardSyncCliClient/internal/service/clipboard"
 	"github.com/YenXXXW/clipboardSyncCliClient/internal/service/command"
 	syncservice "github.com/YenXXXW/clipboardSyncCliClient/internal/service/syncService"
+	"github.com/YenXXXW/clipboardSyncCliClient/internal/types"
 	"github.com/google/uuid"
 
 	pb "github.com/YenXXXW/clipboardSyncCliClient/genproto/clipboardSync"
@@ -38,7 +39,7 @@ func main() {
 
 	log.Println("Reading data from the command line...")
 
-	updatesFromServerChan := make(chan *pb.ClipboardUpdate, 100)
+	updatesFromServerChan := make(chan *types.ClipboardUpdate, 100)
 	syncService := syncservice.NewSyncService(deviceId, "", grpcCleint, updatesFromServerChan)
 
 	clipService := clipboardService.NewClipSyncService(syncService, deviceId)

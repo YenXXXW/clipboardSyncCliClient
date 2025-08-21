@@ -6,6 +6,7 @@ import (
 	"log"
 
 	pb "github.com/YenXXXW/clipboardSyncCliClient/genproto/clipboardSync"
+	"github.com/YenXXXW/clipboardSyncCliClient/internal/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -49,7 +50,7 @@ func (c *clipboardGrpcClient) SendUpdate(ctx context.Context, deviceId, content 
 
 }
 
-func (c *clipboardGrpcClient) ReceiveUpdateAndSync(ctx context.Context, deviceId, roomId string, updateChan chan *pb.ClipboardUpdate) error {
+func (c *clipboardGrpcClient) ReceiveUpdateAndSync(ctx context.Context, deviceId, roomId string, updateChan chan *types.ClipboardUpdate) error {
 
 	req := &pb.SubscribeRequest{
 		DeviceId: deviceId,
@@ -76,8 +77,15 @@ func (c *clipboardGrpcClient) ReceiveUpdateAndSync(ctx context.Context, deviceId
 				return
 			}
 
+			clipboardDataUpdate := &types.ClipboardUpdate{
+				DeviceId: resp.GetDeviceId(),
+				Content: &types.ClipboardContent{
+					Text: resp.GetContent().GetText(),
+				},
+			}
+
 			select {
-			case updateChan <- resp:
+			case updateChan <- clipboardDataUpdate:
 			case <-ctx.Done():
 				log.Println("Context cancelled while sending update")
 				return
