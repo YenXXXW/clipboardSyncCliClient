@@ -15,10 +15,13 @@ type clipboardGrpcClient struct {
 }
 
 func NewGrpcClient(addr string) *clipboardGrpcClient {
+	log.Printf("Connecting to gRPC server at %s", addr)
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatalf("did nto connect %v", err)
+		log.Fatalf("did not connect %v", err)
 	}
+
+	log.Println("Connected to gRPC server")
 
 	c := pb.NewClipSyncServiceClient(conn)
 	clipboardClient := &clipboardGrpcClient{
@@ -57,6 +60,7 @@ func (c *clipboardGrpcClient) ReceiveUpdateAndSync(ctx context.Context, deviceId
 	if err != nil {
 		return err
 	}
+	log.Println("Subscribed to room: ", roomId)
 
 	go func() {
 		defer close(updateChan)

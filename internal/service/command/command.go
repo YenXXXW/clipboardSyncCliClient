@@ -6,13 +6,11 @@ import (
 	"strings"
 
 	syncservice "github.com/YenXXXW/clipboardSyncCliClient/internal/service/syncService"
-	"github.com/YenXXXW/clipboardSyncCliClient/internal/types"
 )
 
 // CommandService is responsible for parsing user commands and delegating to other services.
 type CommandService struct {
 	syncService *syncservice.SyncService
-	cliClient   types.CliClient
 	input       chan string
 }
 
@@ -55,7 +53,5 @@ func (s *CommandService) ProcessCommand(ctx context.Context) {
 			}
 		}
 	}()
-
-	s.cliClient.Run(ctx, s.input)
 
 }

@@ -7,17 +7,22 @@ import (
 	"os/signal"
 	"syscall"
 
+	cliCleint "github.com/YenXXXW/clipboardSyncCliClient/internal/infrastructure/cli"
+	clipxClient "github.com/YenXXXW/clipboardSyncCliClient/internal/infrastructure/clipx"
 	infrastructure "github.com/YenXXXW/clipboardSyncCliClient/internal/infrastructure/grpcClient"
 	clipboardService "github.com/YenXXXW/clipboardSyncCliClient/internal/service/clipboard"
 	"github.com/YenXXXW/clipboardSyncCliClient/internal/service/command"
 	syncservice "github.com/YenXXXW/clipboardSyncCliClient/internal/service/syncService"
 	"github.com/google/uuid"
+
+	pb "github.com/YenXXXW/clipboardSyncCliClient/genproto/clipboardSync"
 )
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	//listen for OS signals to gracefully shutdown
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
@@ -25,27 +30,27 @@ func main() {
 		cancel()
 	}()
 
-	commandInput := make(chan string, 100)
-	deviceId := uuid.NewString()
+	deviceId := uuid.New().String()
 
-	grcClient := infrastructure.NewGrpcClient(":9000")
-	clipboardService := syncservice.NewSyncService()
-	clipSyncService := clipboardService.NewClipSyncService(clipboardService, deviceId)
-	go clipSyncService.Watch(ctx)
-	commandService := command.NewCommandService(commandInput, clipSyncService)
+	userCliInputChan := make(chan string, 100)
+	grpcCleint := infrastructure.NewGrpcClient("localhost:9000")
+	cliClient := cliCleint.NewCliClient()
 
-	userInputChan := make(chan string, 100)
-	go cliService.Run(ctx, userInputChan)
+	log.Println("Reading data from the command line...")
 
-	log.Println("application started. enter /create to create a room, /join <room_id> to join a room")
+	updatesFromServerChan := make(chan *pb.ClipboardUpdate, 100)
+	syncService := syncservice.NewSyncService(deviceId, "", grpcCleint, updatesFromServerChan)
 
-	for {
-		select {
-		case <-ctx.Done():
-			log.Println("application shutting down")
-			return
-		case input := <-userInputChan:
-			commandService.ProcessCommand(ctx, input)
-		}
-	}
+	clipService := clipboardService.NewClipSyncService(syncService, deviceId)
+
+	clipxClient := clipxClient.NewClipxInfra(grpcCleint, clipService, deviceId)
+
+	commandService := command.NewCommandService(userCliInputChan, syncService)
+	clipxClient.Run()
+	clipxClient.NotifyUpdates(ctx)
+	cliClient.Run(ctx, userCliInputChan)
+	commandService.ProcessCommand(ctx)
+
+	<-ctx.Done()
+
 }

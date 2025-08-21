@@ -8,16 +8,16 @@ import (
 	"strings"
 )
 
-type CliService struct {
+type CliClient struct {
 }
 
-func NewClipService(ctx context.Context, input chan string) *CliService {
+func NewCliClient() *CliClient {
 
-	return &CliService{}
+	return &CliClient{}
 }
 
 // Run starts reading user input from the command line continuously and sends it to the input channel.
-func (s *CliService) Run(ctx context.Context, input chan<- string) {
+func (s *CliClient) Run(ctx context.Context, input chan<- string) {
 
 	reader := bufio.NewReader(os.Stdin)
 

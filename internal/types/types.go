@@ -14,6 +14,12 @@ type SyncClient interface {
 	CreateRoom(context.Context, string) (string, error)
 }
 
+type ClipService interface {
+	Watch(string)
+	ProcessUpdates(*pb.ClipboardUpdate)
+	SendUpdate(context.Context, string) error
+}
+
 // interface by the clip service for the clip client to be implemented
 type ClipClient interface {
 	ApplyUpdates(string)
@@ -26,5 +32,5 @@ type ClipSyncService interface {
 }
 
 type CliClient interface {
-	Run(ctx context.Context, input chan string)
+	Run(ctx context.Context, input chan<- string)
 }
