@@ -42,9 +42,6 @@ func (c *clipxinfra) NotifyUpdates(ctx context.Context) {
 	fmt.Println("watching the changes in clipboard")
 	go func() {
 		for data := range ch {
-			fmt.Println("copied the folllowing text")
-			fmt.Println()
-			fmt.Println(string(data))
 			c.clipboardService.Watch(string(data))
 		}
 	}()

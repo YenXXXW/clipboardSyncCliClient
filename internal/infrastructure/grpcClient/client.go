@@ -16,13 +16,11 @@ type clipboardGrpcClient struct {
 }
 
 func NewGrpcClient(addr string) *clipboardGrpcClient {
-	log.Printf("Connecting to gRPC server at %s", addr)
+	//create a connection client
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("did not connect %v", err)
 	}
-
-	log.Println("Connected to gRPC server")
 
 	c := pb.NewClipSyncServiceClient(conn)
 	clipboardClient := &clipboardGrpcClient{

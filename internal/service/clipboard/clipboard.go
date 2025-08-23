@@ -9,6 +9,7 @@ import (
 )
 
 type ClipSyncService struct {
+	syncEnabled      bool
 	clipClient       types.ClipClient
 	clipSyncService  types.ClipSyncService
 	isSyncingInbound bool
@@ -19,6 +20,7 @@ type ClipSyncService struct {
 func NewClipSyncService(clipSyncService types.ClipSyncService, deviceId string) *ClipSyncService {
 
 	return &ClipSyncService{
+		syncEnabled:      true,
 		clipSyncService:  clipSyncService,
 		isSyncingInbound: false,
 		deviceId:         deviceId,
@@ -28,7 +30,8 @@ func NewClipSyncService(clipSyncService types.ClipSyncService, deviceId string) 
 func (c *ClipSyncService) Watch(data string) {
 
 	//check if the change is initiated by the user or the program
-	if !c.isSyncingInbound {
+	log.Println("syncEanble before sending update", c.syncEnabled)
+	if !c.isSyncingInbound && c.syncEnabled {
 		if err := c.clipSyncService.SendUpdate(context.Background(), data); err != nil {
 			log.Printf("failed to send update: %v", err)
 		}
@@ -38,7 +41,7 @@ func (c *ClipSyncService) Watch(data string) {
 // Identify the changes coming from remote and apply
 func (c *ClipSyncService) ProcessUpdates(update *types.ClipboardUpdate) {
 	//process and sync the update only if update not made by the same device
-	if update.DeviceId != c.deviceId {
+	if update.DeviceId != c.deviceId && c.syncEnabled {
 		c.clipClient.ApplyUpdates(update.Content.Text)
 	}
 }
@@ -57,4 +60,12 @@ func (c *ClipSyncService) SendUpdate(ctx context.Context, content string) error 
 		c.mutex.Unlock()
 	}()
 	return c.clipSyncService.SendUpdate(ctx, content)
+}
+
+func (c *ClipSyncService) ToggleSyncEnable(state bool) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	log.Println("clipboard sync state", state)
+	c.syncEnabled = state
 }

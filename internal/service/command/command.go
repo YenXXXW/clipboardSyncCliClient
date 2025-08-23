@@ -6,17 +6,20 @@ import (
 	"strings"
 
 	syncservice "github.com/YenXXXW/clipboardSyncCliClient/internal/service/syncService"
+	"github.com/YenXXXW/clipboardSyncCliClient/internal/types"
 )
 
 // CommandService is responsible for parsing user commands and delegating to other services.
 type CommandService struct {
+	clipService types.ClipService
 	syncService *syncservice.SyncService
 	input       chan string
 }
 
 // NewCommandService creates a new CommandService.
-func NewCommandService(input chan string, syncService *syncservice.SyncService) *CommandService {
+func NewCommandService(input chan string, syncService *syncservice.SyncService, clipService types.ClipService) *CommandService {
 	return &CommandService{
+		clipService: clipService,
 		syncService: syncService,
 		input:       input,
 	}
@@ -24,6 +27,13 @@ func NewCommandService(input chan string, syncService *syncservice.SyncService) 
 
 // ProcessCommand parses the user input and executes the corresponding action.
 func (s *CommandService) ProcessCommand(ctx context.Context) {
+	const (
+		CmdCreate      = "/create"
+		CmdLeave       = "/leave"
+		CmdJoin        = "/join"
+		CmdEnableSync  = "/enableSync"
+		CmdDisableSync = "/disableSync"
+	)
 
 	go func() {
 		for commands := range s.input {
@@ -37,19 +47,29 @@ func (s *CommandService) ProcessCommand(ctx context.Context) {
 			args := parts[1:]
 
 			switch command {
-			case "/create":
+			case CmdCreate:
 				s.syncService.CreateRoom(ctx)
-			case "/leave":
+			case CmdLeave:
 				s.syncService.LeaveRoom(ctx)
-			case "/join":
+			case CmdJoin:
 				if len(args) < 1 {
 					log.Println("Usage: /join <room_id>")
 					return
 				}
 				s.syncService.SubAndSyncUpdate(ctx, args[0])
+			case CmdEnableSync:
+				s.clipService.ToggleSyncEnable(true)
+
+			case CmdDisableSync:
+				s.clipService.ToggleSyncEnable(false)
 			default:
 				// If it's not a command, treat it as a clipboard update.
 				log.Println("Please enter the correct command")
+				log.Printf("to Create a room => \"%s\"", CmdCreate)
+				log.Printf("to Join a room => \"%s\" <room_id>", CmdJoin)
+				log.Printf("to Leave a room => \"%s\"", CmdLeave)
+				log.Printf("to Enable Sync => \"%s\"", CmdEnableSync)
+				log.Printf("to Disable Sync => \"%s\"", CmdDisableSync)
 			}
 		}
 	}()

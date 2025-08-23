@@ -2,8 +2,6 @@ package types
 
 import (
 	"context"
-
-	pb "github.com/YenXXXW/clipboardSyncCliClient/genproto/clipboardSync"
 )
 
 // intface defince by sync service for sync client to be implemented
@@ -16,8 +14,9 @@ type SyncClient interface {
 
 type ClipService interface {
 	Watch(string)
-	ProcessUpdates(*pb.ClipboardUpdate)
+	ProcessUpdates(*ClipboardUpdate)
 	SendUpdate(context.Context, string) error
+	ToggleSyncEnable(bool)
 }
 
 // interface by the clip service for the clip client to be implemented

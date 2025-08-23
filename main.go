@@ -15,8 +15,6 @@ import (
 	syncservice "github.com/YenXXXW/clipboardSyncCliClient/internal/service/syncService"
 	"github.com/YenXXXW/clipboardSyncCliClient/internal/types"
 	"github.com/google/uuid"
-
-	pb "github.com/YenXXXW/clipboardSyncCliClient/genproto/clipboardSync"
 )
 
 func main() {
@@ -46,7 +44,7 @@ func main() {
 
 	clipxClient := clipxClient.NewClipxInfra(grpcCleint, clipService, deviceId)
 
-	commandService := command.NewCommandService(userCliInputChan, syncService)
+	commandService := command.NewCommandService(userCliInputChan, syncService, clipService)
 	clipxClient.Run()
 	clipxClient.NotifyUpdates(ctx)
 	cliClient.Run(ctx, userCliInputChan)

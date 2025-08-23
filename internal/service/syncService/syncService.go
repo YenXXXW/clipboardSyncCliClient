@@ -46,6 +46,7 @@ func (s *SyncService) LeaveRoom(ctx context.Context) {
 	if s.cancelStream != nil {
 		s.cancelStream()
 	}
+	//disable the sync when the user leaves the room
 	s.syncClient.LeaveRoom(ctx, s.deviceId, s.roomId)
 }
 
@@ -64,7 +65,7 @@ func (c *SyncService) SubAndSyncUpdate(ctx context.Context, roomId string) error
 					log.Println("Stopping update processor: channel closed")
 					return
 				}
-				log.Printf("Received update from server: %s", update)
+				log.Printf("Received update from server: %v", update)
 				// Process the updates from the incomingudpates channel sent by grpc client and apply it to the clipboard
 				c.clipbaorService.ProcessUpdates(update)
 			}
@@ -72,6 +73,7 @@ func (c *SyncService) SubAndSyncUpdate(ctx context.Context, roomId string) error
 	}()
 
 	if err := c.syncClient.ReceiveUpdateAndSync(streamCtx, c.deviceId, roomId, c.incomingUpdatesFromServer); err != nil {
+		cancel()
 		log.Printf("failed to subscribe to updates: %v", err)
 		return err
 	}
