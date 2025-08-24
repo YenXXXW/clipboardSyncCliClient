@@ -3,13 +3,14 @@ package syncservice
 import (
 	"context"
 	"log"
+	"time"
 
-	clipboardService "github.com/YenXXXW/clipboardSyncCliClient/internal/service/clipboard"
 	"github.com/YenXXXW/clipboardSyncCliClient/internal/types"
 )
 
 type SyncService struct {
-	clipbaorService           clipboardService.ClipSyncService
+	localUpdatesChan          chan string
+	clipboardService          types.ClipService
 	syncClient                types.SyncClient
 	deviceId                  string
 	roomId                    string
@@ -17,8 +18,10 @@ type SyncService struct {
 	incomingUpdatesFromServer chan *types.ClipboardUpdate
 }
 
-func NewSyncService(deviceId, roomId string, syncClient types.SyncClient, incomingUpdatesFromServer chan *types.ClipboardUpdate) *SyncService {
+func NewSyncService(deviceId, roomId string, clipboardService types.ClipService, syncClient types.SyncClient, incomingUpdatesFromServer chan *types.ClipboardUpdate, LocalUpdateChan chan string) *SyncService {
 	return &SyncService{
+		localUpdatesChan:          LocalUpdateChan,
+		clipboardService:          clipboardService,
 		syncClient:                syncClient,
 		deviceId:                  deviceId,
 		roomId:                    roomId,
@@ -26,12 +29,38 @@ func NewSyncService(deviceId, roomId string, syncClient types.SyncClient, incomi
 	}
 }
 
-func (s *SyncService) SendUpdate(ctx context.Context, content string) error {
-	return s.syncClient.SendUpdate(ctx, s.deviceId, content)
+func (s *SyncService) SendUpdate(clientServiceCtx context.Context) {
+	for {
+		select {
+
+		case content, ok := <-s.localUpdatesChan:
+			if !ok {
+				log.Println("LocalUpdatesChan was closed. Stopping.")
+				return
+			}
+			s.sendRpcWithTimeout(content)
+
+		case <-clientServiceCtx.Done():
+			return
+		}
+
+	}
 }
 
-func (s *SyncService) CreateRoom(ctx context.Context) {
+func (s *SyncService) sendRpcWithTimeout(content string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	s.syncClient.SendUpdate(ctx, s.deviceId, content)
+}
+
+func (s *SyncService) CreateRoom() {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	roomId, err := s.syncClient.CreateRoom(ctx, s.deviceId)
+
 	if err != nil {
 		log.Printf("Error creating room %v", err)
 		return
@@ -42,7 +71,11 @@ func (s *SyncService) CreateRoom(ctx context.Context) {
 
 }
 
-func (s *SyncService) LeaveRoom(ctx context.Context) {
+func (s *SyncService) LeaveRoom() {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
 	if s.cancelStream != nil {
 		s.cancelStream()
 	}
@@ -50,8 +83,8 @@ func (s *SyncService) LeaveRoom(ctx context.Context) {
 	s.syncClient.LeaveRoom(ctx, s.deviceId, s.roomId)
 }
 
-func (c *SyncService) SubAndSyncUpdate(ctx context.Context, roomId string) error {
-	streamCtx, cancel := context.WithCancel(ctx)
+func (c *SyncService) SubAndSyncUpdate(roomId string) error {
+	streamCtx, cancel := context.WithCancel(context.Background())
 	c.cancelStream = cancel
 
 	go func() {
@@ -67,14 +100,17 @@ func (c *SyncService) SubAndSyncUpdate(ctx context.Context, roomId string) error
 				}
 				log.Printf("Received update from server: %v", update)
 				// Process the updates from the incomingudpates channel sent by grpc client and apply it to the clipboard
-				c.clipbaorService.ProcessUpdates(update)
+				c.clipboardService.ProcessUpdates(update)
 			}
 		}
 	}()
 
+	c.clipboardService.ToggleSyncEnable(true)
+
 	if err := c.syncClient.ReceiveUpdateAndSync(streamCtx, c.deviceId, roomId, c.incomingUpdatesFromServer); err != nil {
-		cancel()
 		log.Printf("failed to subscribe to updates: %v", err)
+		cancel()
+		c.clipboardService.ToggleSyncEnable(false)
 		return err
 	}
 

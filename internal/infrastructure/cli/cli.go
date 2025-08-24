@@ -17,7 +17,7 @@ func NewCliClient() *CliClient {
 }
 
 // Run starts reading user input from the command line continuously and sends it to the input channel.
-func (s *CliClient) Run(ctx context.Context, input chan<- string) {
+func (s *CliClient) Run(clientServiceCtx context.Context, input chan<- string) {
 
 	reader := bufio.NewReader(os.Stdin)
 
@@ -31,7 +31,7 @@ func (s *CliClient) Run(ctx context.Context, input chan<- string) {
 			}
 
 			select {
-			case <-ctx.Done():
+			case <-clientServiceCtx.Done():
 				return
 			case input <- strings.TrimSpace(line):
 			}

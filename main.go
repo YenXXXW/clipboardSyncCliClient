@@ -18,7 +18,7 @@ import (
 )
 
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
+	clientServiceCtx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//listen for OS signals to gracefully shutdown
@@ -37,19 +37,28 @@ func main() {
 
 	log.Println("Reading data from the command line...")
 
+	//update chan to send data between syncService and clipService
 	updatesFromServerChan := make(chan *types.ClipboardUpdate, 100)
-	syncService := syncservice.NewSyncService(deviceId, "", grpcCleint, updatesFromServerChan)
+	localUpdatesChan := make(chan string, 100)
 
-	clipService := clipboardService.NewClipSyncService(syncService, deviceId)
+	//channel to send the data between the clipx infra and clipService
+	localClipUpdatesChan := make(chan string, 100)
 
-	clipxClient := clipxClient.NewClipxInfra(grpcCleint, clipService, deviceId)
+	clipxClient := clipxClient.NewClipxInfra(deviceId, localClipUpdatesChan)
+
+	clipService := clipboardService.NewClipSyncService(deviceId, clipxClient, localUpdatesChan, localClipUpdatesChan)
+	go clipService.RecieveUpdatesFromClipboardClient(clientServiceCtx)
+	syncService := syncservice.NewSyncService(deviceId, "", clipService, grpcCleint, updatesFromServerChan, localUpdatesChan)
 
 	commandService := command.NewCommandService(userCliInputChan, syncService, clipService)
-	clipxClient.Run()
-	clipxClient.NotifyUpdates(ctx)
-	cliClient.Run(ctx, userCliInputChan)
-	commandService.ProcessCommand(ctx)
 
-	<-ctx.Done()
+	go syncService.SendUpdate(clientServiceCtx)
+	clipxClient.Run()
+	clipxClient.NotifyUpdates(clientServiceCtx)
+
+	cliClient.Run(clientServiceCtx, userCliInputChan)
+	commandService.ProcessCommand(clientServiceCtx)
+
+	<-clientServiceCtx.Done()
 
 }

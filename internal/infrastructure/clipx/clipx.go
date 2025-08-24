@@ -5,24 +5,21 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/YenXXXW/clipboardSyncCliClient/internal/types"
 	"golang.design/x/clipboard"
 )
 
 type clipxinfra struct {
-	syncClient       types.SyncClient
-	clipboardService types.ClipService
-	isSyncingInbound bool //to prevent sedning of the clipbaord data to the server when we apply the remote change
-	mutex            sync.Mutex
-	deviceId         string
+	localClipUpdatesChan chan string
+	isSyncingInbound     bool //to prevent sedning of the clipbaord data to the server when we apply the remote change
+	mutex                sync.Mutex
+	deviceId             string
 }
 
-func NewClipxInfra(syncClient types.SyncClient, clipboardService types.ClipService, deviceId string) *clipxinfra {
+func NewClipxInfra(deviceId string, localClipUpdatesChan chan string) *clipxinfra {
 	return &clipxinfra{
-		syncClient:       syncClient,
-		clipboardService: clipboardService,
-		isSyncingInbound: false,
-		deviceId:         deviceId,
+		localClipUpdatesChan: localClipUpdatesChan,
+		isSyncingInbound:     false,
+		deviceId:             deviceId,
 	}
 }
 
@@ -36,13 +33,13 @@ func (c *clipxinfra) Run() {
 
 }
 
-func (c *clipxinfra) NotifyUpdates(ctx context.Context) {
+func (c *clipxinfra) NotifyUpdates(clientServiceCtx context.Context) {
 
-	ch := clipboard.Watch(ctx, clipboard.FmtText)
+	ch := clipboard.Watch(clientServiceCtx, clipboard.FmtText)
 	fmt.Println("watching the changes in clipboard")
 	go func() {
 		for data := range ch {
-			c.clipboardService.Watch(string(data))
+			c.localClipUpdatesChan <- string(data)
 		}
 	}()
 

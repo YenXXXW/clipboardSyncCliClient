@@ -13,9 +13,9 @@ type SyncClient interface {
 }
 
 type ClipService interface {
-	Watch(string)
+	RecieveUpdatesFromClipboardClient(context.Context)
 	ProcessUpdates(*ClipboardUpdate)
-	SendUpdate(context.Context, string) error
+	SendUpdate(context.Context, string)
 	ToggleSyncEnable(bool)
 }
 
@@ -23,7 +23,7 @@ type ClipService interface {
 type ClipClient interface {
 	ApplyUpdates(string)
 	//fucntion that will give the newly update clipboard data
-	NotifyUpdates(string)
+	NotifyUpdates(context.Context)
 }
 
 type ClipSyncService interface {
