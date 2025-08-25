@@ -32,6 +32,7 @@ func (s *CliClient) Run(clientServiceCtx context.Context, input chan<- string) {
 
 			select {
 			case <-clientServiceCtx.Done():
+				log.Println("clipboard client stopped")
 				return
 			case input <- strings.TrimSpace(line):
 			}

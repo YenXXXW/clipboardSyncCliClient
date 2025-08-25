@@ -2,6 +2,7 @@ package syncservice
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -41,6 +42,7 @@ func (s *SyncService) SendUpdate(clientServiceCtx context.Context) {
 			s.sendRpcWithTimeout(content)
 
 		case <-clientServiceCtx.Done():
+			fmt.Println("Sync service stopped")
 			return
 		}
 

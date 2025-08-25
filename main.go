@@ -57,8 +57,9 @@ func main() {
 	clipxClient.NotifyUpdates(clientServiceCtx)
 
 	cliClient.Run(clientServiceCtx, userCliInputChan)
-	commandService.ProcessCommand(clientServiceCtx)
+	go commandService.ProcessCommand(clientServiceCtx)
 
+	log.Println("Stopping the clipSync client")
 	<-clientServiceCtx.Done()
 
 }

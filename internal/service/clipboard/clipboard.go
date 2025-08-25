@@ -35,6 +35,7 @@ func (c *ClipSyncService) RecieveUpdatesFromClipboardClient(clientServiceCtx con
 	for {
 		select {
 		case <-clientServiceCtx.Done():
+			log.Println("clipboard service stopped")
 			return
 
 		case data := <-c.localClipUpdatesChan:
