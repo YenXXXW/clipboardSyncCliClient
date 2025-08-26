@@ -15,9 +15,14 @@ import (
 	syncservice "github.com/YenXXXW/clipboardSyncCliClient/internal/service/syncService"
 	"github.com/YenXXXW/clipboardSyncCliClient/internal/types"
 	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Error loading .env file")
+	}
 	clientServiceCtx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -32,7 +37,7 @@ func main() {
 	deviceId := uuid.New().String()
 
 	userCliInputChan := make(chan string, 100)
-	grpcCleint := infrastructure.NewGrpcClient("localhost:9000")
+	grpcCleint := infrastructure.NewGrpcClient(os.Getenv("SERVER_ADDR"))
 	cliClient := cliCleint.NewCliClient()
 
 	log.Println("Reading data from the command line...")
@@ -56,10 +61,7 @@ func main() {
 	clipxClient.Run()
 	clipxClient.NotifyUpdates(clientServiceCtx)
 
-	cliClient.Run(clientServiceCtx, userCliInputChan)
 	go commandService.ProcessCommand(clientServiceCtx)
-
-	log.Println("Stopping the clipSync client")
-	<-clientServiceCtx.Done()
+	cliClient.Run(clientServiceCtx, userCliInputChan)
 
 }

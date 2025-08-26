@@ -36,12 +36,15 @@ func (s *CommandService) ProcessCommand(clientServiceCtx context.Context) {
 		CmdDisableSync = "/disableSync"
 	)
 
+	fmt.Println("waiting for the command to process")
+
 	for {
 
 		select {
 		case commands, ok := <-s.input:
 			if !ok {
-				log.Println("Error reading command from user in cli")
+				log.Println("stopping the command processing...")
+				return
 			}
 
 			parts := strings.Fields(commands)
@@ -74,12 +77,12 @@ func (s *CommandService) ProcessCommand(clientServiceCtx context.Context) {
 
 			default:
 				// If it's not a command, treat it as a clipboard update.
-				log.Println("Please enter the correct command")
-				log.Printf("to Create a room => \"%s\"", CmdCreate)
-				log.Printf("to Join a room => \"%s\" <room_id>", CmdJoin)
-				log.Printf("to Leave a room => \"%s\"", CmdLeave)
-				log.Printf("to Enable Sync => \"%s\"", CmdEnableSync)
-				log.Printf("to Disable Sync => \"%s\"", CmdDisableSync)
+				fmt.Println("Please enter the correct command")
+				fmt.Printf("to Create a room => \"%s\"\n", CmdCreate)
+				fmt.Printf("to Join a room => \"%s\" <room_id>\n", CmdJoin)
+				fmt.Printf("to Leave a room => \"%s\"\n", CmdLeave)
+				fmt.Printf("to Enable Sync => \"%s\"\n", CmdEnableSync)
+				fmt.Printf("to Disable Sync => \"%s\"\n", CmdDisableSync)
 			}
 
 		case <-clientServiceCtx.Done():
