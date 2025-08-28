@@ -10,6 +10,7 @@ import (
 	cliCleint "github.com/YenXXXW/clipboardSyncCliClient/internal/infrastructure/cli"
 	clipxClient "github.com/YenXXXW/clipboardSyncCliClient/internal/infrastructure/clipx"
 	infrastructure "github.com/YenXXXW/clipboardSyncCliClient/internal/infrastructure/grpcClient"
+	"github.com/YenXXXW/clipboardSyncCliClient/internal/infrastructure/notifier"
 	clipboardService "github.com/YenXXXW/clipboardSyncCliClient/internal/service/clipboard"
 	"github.com/YenXXXW/clipboardSyncCliClient/internal/service/command"
 	syncservice "github.com/YenXXXW/clipboardSyncCliClient/internal/service/syncService"
@@ -36,15 +37,17 @@ func main() {
 
 	deviceId := uuid.New().String()
 
+	terminalNotifier := notifier.NewTerminalNotifiter()
 	userCliInputChan := make(chan string, 100)
-	grpcCleint := infrastructure.NewGrpcClient(os.Getenv("SERVER_ADDR"))
+	grpcCleint := infrastructure.NewGrpcClient(os.Getenv("SERVER_ADDR"), terminalNotifier)
 	cliClient := cliCleint.NewCliClient()
-
-	log.Println("Reading data from the command line...")
 
 	//update chan to send data between syncService and clipService
 	updatesFromServerChan := make(chan *types.ClipboardUpdate, 100)
 	localUpdatesChan := make(chan string, 100)
+
+	defer close(updatesFromServerChan)
+	defer close(localUpdatesChan)
 
 	//channel to send the data between the clipx infra and clipService
 	localClipUpdatesChan := make(chan string, 100)
@@ -53,7 +56,7 @@ func main() {
 
 	clipService := clipboardService.NewClipSyncService(deviceId, clipxClient, localUpdatesChan, localClipUpdatesChan)
 	go clipService.RecieveUpdatesFromClipboardClient(clientServiceCtx)
-	syncService := syncservice.NewSyncService(deviceId, "", clipService, grpcCleint, updatesFromServerChan, localUpdatesChan)
+	syncService := syncservice.NewSyncService(terminalNotifier, deviceId, "", clipService, grpcCleint, updatesFromServerChan, localUpdatesChan)
 
 	commandService := command.NewCommandService(userCliInputChan, syncService, clipService)
 

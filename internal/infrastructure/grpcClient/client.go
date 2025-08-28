@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 
@@ -12,10 +13,11 @@ import (
 )
 
 type clipboardGrpcClient struct {
-	client pb.ClipSyncServiceClient
+	client           pb.ClipSyncServiceClient
+	terminalNotifier types.Notifier
 }
 
-func NewGrpcClient(addr string) *clipboardGrpcClient {
+func NewGrpcClient(addr string, terminalNotifer types.Notifier) *clipboardGrpcClient {
 	//create a connection client
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -24,7 +26,8 @@ func NewGrpcClient(addr string) *clipboardGrpcClient {
 
 	c := pb.NewClipSyncServiceClient(conn)
 	clipboardClient := &clipboardGrpcClient{
-		client: c,
+		client:           c,
+		terminalNotifier: terminalNotifer,
 	}
 	return clipboardClient
 }
@@ -59,10 +62,10 @@ func (c *clipboardGrpcClient) ReceiveUpdateAndSync(ctx context.Context, deviceId
 	if err != nil {
 		return err
 	}
-	log.Println("Subscribed to room: ", roomId)
+	c.terminalNotifier.Success(fmt.Sprintf("Successfully Joined and Subscribed to room: %s", roomId))
 
 	go func() {
-		defer close(updateChan)
+		//defer close(updateChan)
 
 		for {
 			resp, err := stream.Recv()
@@ -71,7 +74,6 @@ func (c *clipboardGrpcClient) ReceiveUpdateAndSync(ctx context.Context, deviceId
 				break
 			}
 			if err != nil {
-				log.Fatalf("error receiving from stream: %v", err)
 				return
 			}
 

@@ -17,10 +17,12 @@ type SyncService struct {
 	roomId                    string
 	cancelStream              context.CancelFunc
 	incomingUpdatesFromServer chan *types.ClipboardUpdate
+	infoLogger                types.Notifier
 }
 
-func NewSyncService(deviceId, roomId string, clipboardService types.ClipService, syncClient types.SyncClient, incomingUpdatesFromServer chan *types.ClipboardUpdate, LocalUpdateChan chan string) *SyncService {
+func NewSyncService(infoLogger types.Notifier, deviceId, roomId string, clipboardService types.ClipService, syncClient types.SyncClient, incomingUpdatesFromServer chan *types.ClipboardUpdate, LocalUpdateChan chan string) *SyncService {
 	return &SyncService{
+		infoLogger:                infoLogger,
 		localUpdatesChan:          LocalUpdateChan,
 		clipboardService:          clipboardService,
 		syncClient:                syncClient,
@@ -68,9 +70,10 @@ func (s *SyncService) CreateRoom() {
 		return
 	}
 
-	log.Println("roomId", roomId)
-	s.roomId = roomId
+	s.SubAndSyncUpdate(roomId)
 
+	s.infoLogger.Success("Room created successfully")
+	s.infoLogger.Info(fmt.Sprintf("room id - %s", roomId))
 }
 
 func (s *SyncService) LeaveRoom() {
@@ -82,7 +85,15 @@ func (s *SyncService) LeaveRoom() {
 		s.cancelStream()
 	}
 	//disable the sync when the user leaves the room
+
+	if s.roomId == "" {
+		s.infoLogger.Error("You are not in a room")
+		return
+	}
 	s.syncClient.LeaveRoom(ctx, s.deviceId, s.roomId)
+	s.roomId = ""
+	fmt.Println("roomid", s.roomId)
+	s.infoLogger.Success("Left Rooom Successfully")
 }
 
 func (c *SyncService) SubAndSyncUpdate(roomId string) error {
@@ -93,11 +104,9 @@ func (c *SyncService) SubAndSyncUpdate(roomId string) error {
 		for {
 			select {
 			case <-streamCtx.Done():
-				log.Println("Stopping update processor: context canceled")
 				return
 			case update, ok := <-c.incomingUpdatesFromServer:
 				if !ok {
-					log.Println("Stopping update processor: channel closed")
 					return
 				}
 				log.Printf("Received update from server: %v", update)
@@ -108,6 +117,7 @@ func (c *SyncService) SubAndSyncUpdate(roomId string) error {
 	}()
 
 	c.clipboardService.ToggleSyncEnable(true)
+	c.roomId = roomId
 
 	if err := c.syncClient.ReceiveUpdateAndSync(streamCtx, c.deviceId, roomId, c.incomingUpdatesFromServer); err != nil {
 		log.Printf("failed to subscribe to updates: %v", err)

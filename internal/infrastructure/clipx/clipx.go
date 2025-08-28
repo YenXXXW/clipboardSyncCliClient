@@ -28,15 +28,12 @@ func (c *clipxinfra) Run() {
 	if err != nil {
 		panic(err)
 	}
-
-	fmt.Println("the clipboard in ready")
-
 }
 
 func (c *clipxinfra) NotifyUpdates(clientServiceCtx context.Context) {
 
 	ch := clipboard.Watch(clientServiceCtx, clipboard.FmtText)
-	fmt.Println("watching the changes in clipboard")
+	fmt.Println("Watching for changes in clipboard")
 	go func() {
 		for data := range ch {
 			c.localClipUpdatesChan <- string(data)

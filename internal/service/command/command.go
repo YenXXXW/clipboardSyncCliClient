@@ -35,9 +35,23 @@ func (s *CommandService) ProcessCommand(clientServiceCtx context.Context) {
 		CmdEnableSync  = "/enableSync"
 		CmdDisableSync = "/disableSync"
 	)
+	const (
+		Reset  = "\033[0m"
+		Cyan   = "\033[36m"
+		Yellow = "\033[33m"
+	)
 
-	fmt.Println("waiting for the command to process")
+	fmt.Println()
+	fmt.Println("You can use the following commands:")
 
+	fmt.Printf("- Create a room:      %s\"%s\"%s\n", Cyan, CmdCreate, Reset)
+	fmt.Printf("- Join a room:        %s\"%s <room_id>\"%s\n", Cyan, CmdJoin, Reset)
+	fmt.Printf("- Leave a room:       %s\"%s\"%s\n", Cyan, CmdLeave, Reset)
+	fmt.Printf("- Enable sync:        %s\"%s\"%s\n", Cyan, CmdEnableSync, Reset)
+	fmt.Printf("- Disable sync:       %s\"%s\"%s\n", Cyan, CmdDisableSync, Reset)
+
+	fmt.Println()
+	fmt.Println(Yellow + "Waiting for your command..." + Reset)
 	for {
 
 		select {
@@ -65,7 +79,7 @@ func (s *CommandService) ProcessCommand(clientServiceCtx context.Context) {
 			case CmdJoin:
 				if len(args) < 1 {
 					log.Println("Usage: /join <room_id>")
-					return
+					continue
 				}
 				s.syncService.SubAndSyncUpdate(args[0])
 
