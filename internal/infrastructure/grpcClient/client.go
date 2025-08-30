@@ -15,9 +15,10 @@ import (
 type clipboardGrpcClient struct {
 	client           pb.ClipSyncServiceClient
 	terminalNotifier types.Notifier
+	formatter        types.Formatter
 }
 
-func NewGrpcClient(addr string, terminalNotifer types.Notifier) *clipboardGrpcClient {
+func NewGrpcClient(addr string, terminalNotifer types.Notifier, formatter types.Formatter) *clipboardGrpcClient {
 	//create a connection client
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -28,6 +29,7 @@ func NewGrpcClient(addr string, terminalNotifer types.Notifier) *clipboardGrpcCl
 	clipboardClient := &clipboardGrpcClient{
 		client:           c,
 		terminalNotifier: terminalNotifer,
+		formatter:        formatter,
 	}
 	return clipboardClient
 }
@@ -62,7 +64,7 @@ func (c *clipboardGrpcClient) ReceiveUpdateAndSync(ctx context.Context, deviceId
 	if err != nil {
 		return err
 	}
-	c.terminalNotifier.Success(fmt.Sprintf("Successfully Joined and Subscribed to room: %s", roomId))
+	c.terminalNotifier.Print(c.formatter.Success(fmt.Sprintf("Successfully Joined and Subscribed to room: %s", roomId)))
 
 	go func() {
 		//defer close(updateChan)

@@ -13,6 +13,7 @@ import (
 	"github.com/YenXXXW/clipboardSyncCliClient/internal/infrastructure/notifier"
 	clipboardService "github.com/YenXXXW/clipboardSyncCliClient/internal/service/clipboard"
 	"github.com/YenXXXW/clipboardSyncCliClient/internal/service/command"
+	"github.com/YenXXXW/clipboardSyncCliClient/internal/service/formatter"
 	syncservice "github.com/YenXXXW/clipboardSyncCliClient/internal/service/syncService"
 	"github.com/YenXXXW/clipboardSyncCliClient/internal/types"
 	"github.com/google/uuid"
@@ -38,8 +39,9 @@ func main() {
 	deviceId := uuid.New().String()
 
 	terminalNotifier := notifier.NewTerminalNotifiter()
+	formatter := formatter.NewFormatter()
 	userCliInputChan := make(chan string, 100)
-	grpcCleint := infrastructure.NewGrpcClient(os.Getenv("SERVER_ADDR"), terminalNotifier)
+	grpcCleint := infrastructure.NewGrpcClient(os.Getenv("SERVER_ADDR"), terminalNotifier, formatter)
 	cliClient := cliCleint.NewCliClient()
 
 	//update chan to send data between syncService and clipService
@@ -56,9 +58,9 @@ func main() {
 
 	clipService := clipboardService.NewClipSyncService(deviceId, clipxClient, localUpdatesChan, localClipUpdatesChan)
 	go clipService.RecieveUpdatesFromClipboardClient(clientServiceCtx)
-	syncService := syncservice.NewSyncService(terminalNotifier, deviceId, "", clipService, grpcCleint, updatesFromServerChan, localUpdatesChan)
+	syncService := syncservice.NewSyncService(formatter, terminalNotifier, deviceId, "", clipService, grpcCleint, updatesFromServerChan, localUpdatesChan)
 
-	commandService := command.NewCommandService(userCliInputChan, syncService, clipService)
+	commandService := command.NewCommandService(userCliInputChan, syncService, clipService, formatter, terminalNotifier)
 
 	go syncService.SendUpdate(clientServiceCtx)
 	clipxClient.Run()

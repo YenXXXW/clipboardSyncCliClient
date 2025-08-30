@@ -2,14 +2,15 @@ package syncservice
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/YenXXXW/clipboardSyncCliClient/internal/types"
 )
 
 type SyncService struct {
+	formatter                 types.Formatter
 	localUpdatesChan          chan string
 	clipboardService          types.ClipService
 	syncClient                types.SyncClient
@@ -20,8 +21,9 @@ type SyncService struct {
 	infoLogger                types.Notifier
 }
 
-func NewSyncService(infoLogger types.Notifier, deviceId, roomId string, clipboardService types.ClipService, syncClient types.SyncClient, incomingUpdatesFromServer chan *types.ClipboardUpdate, LocalUpdateChan chan string) *SyncService {
+func NewSyncService(formatter types.Formatter, infoLogger types.Notifier, deviceId, roomId string, clipboardService types.ClipService, syncClient types.SyncClient, incomingUpdatesFromServer chan *types.ClipboardUpdate, LocalUpdateChan chan string) *SyncService {
 	return &SyncService{
+		formatter:                 formatter,
 		infoLogger:                infoLogger,
 		localUpdatesChan:          LocalUpdateChan,
 		clipboardService:          clipboardService,
@@ -38,13 +40,11 @@ func (s *SyncService) SendUpdate(clientServiceCtx context.Context) {
 
 		case content, ok := <-s.localUpdatesChan:
 			if !ok {
-				log.Println("LocalUpdatesChan was closed. Stopping.")
 				return
 			}
 			s.sendRpcWithTimeout(content)
 
 		case <-clientServiceCtx.Done():
-			fmt.Println("Sync service stopped")
 			return
 		}
 
@@ -66,14 +66,16 @@ func (s *SyncService) CreateRoom() {
 	roomId, err := s.syncClient.CreateRoom(ctx, s.deviceId)
 
 	if err != nil {
-		log.Printf("Error creating room %v", err)
+		s.infoLogger.Print(s.formatter.Error(fmt.Sprintf("Error creating room %v", err)))
 		return
 	}
 
 	s.SubAndSyncUpdate(roomId)
 
-	s.infoLogger.Success("Room created successfully")
-	s.infoLogger.Info(fmt.Sprintf("room id - %s", roomId))
+	successMsg := s.formatter.Success("Room created successfully")
+	roomIdMsg := s.formatter.Info(fmt.Sprintf("room id - %s", roomId))
+	s.infoLogger.Print(successMsg)
+	s.infoLogger.Print(roomIdMsg)
 }
 
 func (s *SyncService) LeaveRoom() {
@@ -87,16 +89,22 @@ func (s *SyncService) LeaveRoom() {
 	//disable the sync when the user leaves the room
 
 	if s.roomId == "" {
-		s.infoLogger.Error("You are not in a room")
+		errorMsg := s.formatter.Error("You are not in a room")
+		s.infoLogger.Print(errorMsg)
 		return
 	}
 	s.syncClient.LeaveRoom(ctx, s.deviceId, s.roomId)
 	s.roomId = ""
-	fmt.Println("roomid", s.roomId)
-	s.infoLogger.Success("Left Rooom Successfully")
+	s.infoLogger.Print(s.formatter.Success("Left Rooom Successfully"))
 }
 
 func (c *SyncService) SubAndSyncUpdate(roomId string) error {
+	if c.roomId != "" {
+
+		c.infoLogger.Print(c.formatter.Error("You are already in a room. Please leave it before joining another."))
+		return errors.New("Already in a room")
+
+	}
 	streamCtx, cancel := context.WithCancel(context.Background())
 	c.cancelStream = cancel
 
@@ -109,7 +117,6 @@ func (c *SyncService) SubAndSyncUpdate(roomId string) error {
 				if !ok {
 					return
 				}
-				log.Printf("Received update from server: %v", update)
 				// Process the updates from the incomingudpates channel sent by grpc client and apply it to the clipboard
 				c.clipboardService.ProcessUpdates(update)
 			}
@@ -120,8 +127,9 @@ func (c *SyncService) SubAndSyncUpdate(roomId string) error {
 	c.roomId = roomId
 
 	if err := c.syncClient.ReceiveUpdateAndSync(streamCtx, c.deviceId, roomId, c.incomingUpdatesFromServer); err != nil {
-		log.Printf("failed to subscribe to updates: %v", err)
+		c.infoLogger.Print(c.formatter.Error(fmt.Sprintf("failed to subscribe to updates: %v", err)))
 		cancel()
+		c.roomId = ""
 		c.clipboardService.ToggleSyncEnable(false)
 		return err
 	}

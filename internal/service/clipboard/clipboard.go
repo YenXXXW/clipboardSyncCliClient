@@ -2,7 +2,6 @@ package clipboardService
 
 import (
 	"context"
-	"log"
 	"sync"
 
 	"github.com/YenXXXW/clipboardSyncCliClient/internal/types"
@@ -35,7 +34,6 @@ func (c *ClipSyncService) RecieveUpdatesFromClipboardClient(clientServiceCtx con
 	for {
 		select {
 		case <-clientServiceCtx.Done():
-			log.Println("clipboard service stopped")
 			return
 
 		case data := <-c.localClipUpdatesChan:
@@ -53,8 +51,6 @@ func (c *ClipSyncService) RecieveUpdatesFromClipboardClient(clientServiceCtx con
 // Identify the changes coming from remote and apply
 func (c *ClipSyncService) ProcessUpdates(update *types.ClipboardUpdate) {
 	//process and sync the update only if update not made by the same device
-	log.Println("insdie process Updates function")
-	log.Println(update.DeviceId, c.deviceId, c.syncEnabled)
 	if update.DeviceId != c.deviceId && c.syncEnabled {
 		c.clipClient.ApplyUpdates(update.Content.Text)
 	}
@@ -80,6 +76,5 @@ func (c *ClipSyncService) ToggleSyncEnable(state bool) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	log.Println("clipboard sync state", state)
 	c.syncEnabled = state
 }

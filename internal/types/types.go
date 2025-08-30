@@ -14,13 +14,18 @@ type ClipService interface {
 
 // Notifier Service
 type Notifier interface {
-	Info(msg string)
-	Success(msg string)
-	Error(msg string)
+	Print(msg string)
 }
 
 type ClipSyncService interface {
 	SendUpdate(context.Context, string) error
+}
+
+type Formatter interface {
+	Info(string) string
+	Success(string) string
+	Error(string) string
+	Warn(string) string
 }
 
 /* ---- Clients ------*/

@@ -3,7 +3,6 @@ package command
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 
 	syncservice "github.com/YenXXXW/clipboardSyncCliClient/internal/service/syncService"
@@ -12,29 +11,42 @@ import (
 
 // CommandService is responsible for parsing user commands and delegating to other services.
 type CommandService struct {
+	notifier    types.Notifier
+	formatter   types.Formatter
 	clipService types.ClipService
 	syncService *syncservice.SyncService
 	input       chan string
 }
 
 // NewCommandService creates a new CommandService.
-func NewCommandService(input chan string, syncService *syncservice.SyncService, clipService types.ClipService) *CommandService {
+func NewCommandService(input chan string, syncService *syncservice.SyncService, clipService types.ClipService, formatter types.Formatter, notifier types.Notifier) *CommandService {
 	return &CommandService{
+		formatter:   formatter,
+		notifier:    notifier,
 		clipService: clipService,
 		syncService: syncService,
 		input:       input,
 	}
 }
 
+const (
+	CmdCreate      = "/create"
+	CmdLeave       = "/leave"
+	CmdJoin        = "/join"
+	CmdEnableSync  = "/enableSync"
+	CmdDisableSync = "/disableSync"
+)
+
+func (s *CommandService) PrintAvailableCommand() {
+	s.notifier.Print("- Create a room:      " + s.formatter.Info(CmdCreate))
+	s.notifier.Print("- Join a room:        " + s.formatter.Info(CmdJoin+" <room_id>"))
+	s.notifier.Print("- Leave a room:       " + s.formatter.Info(CmdLeave))
+	s.notifier.Print("- Enable sync:        " + s.formatter.Info(CmdEnableSync))
+	s.notifier.Print("- Disable sync:       " + s.formatter.Info(CmdDisableSync))
+}
+
 // ProcessCommand parses the user input and executes the corresponding action.
 func (s *CommandService) ProcessCommand(clientServiceCtx context.Context) {
-	const (
-		CmdCreate      = "/create"
-		CmdLeave       = "/leave"
-		CmdJoin        = "/join"
-		CmdEnableSync  = "/enableSync"
-		CmdDisableSync = "/disableSync"
-	)
 	const (
 		Reset  = "\033[0m"
 		Cyan   = "\033[36m"
@@ -42,13 +54,8 @@ func (s *CommandService) ProcessCommand(clientServiceCtx context.Context) {
 	)
 
 	fmt.Println()
-	fmt.Println("You can use the following commands:")
-
-	fmt.Printf("- Create a room:      %s\"%s\"%s\n", Cyan, CmdCreate, Reset)
-	fmt.Printf("- Join a room:        %s\"%s <room_id>\"%s\n", Cyan, CmdJoin, Reset)
-	fmt.Printf("- Leave a room:       %s\"%s\"%s\n", Cyan, CmdLeave, Reset)
-	fmt.Printf("- Enable sync:        %s\"%s\"%s\n", Cyan, CmdEnableSync, Reset)
-	fmt.Printf("- Disable sync:       %s\"%s\"%s\n", Cyan, CmdDisableSync, Reset)
+	s.notifier.Print(s.formatter.Warn("You can use the following commands:"))
+	s.PrintAvailableCommand()
 
 	fmt.Println()
 	fmt.Println(Yellow + "Waiting for your command..." + Reset)
@@ -57,7 +64,7 @@ func (s *CommandService) ProcessCommand(clientServiceCtx context.Context) {
 		select {
 		case commands, ok := <-s.input:
 			if !ok {
-				log.Println("stopping the command processing...")
+				s.notifier.Print(s.formatter.Info("Stopping the command processing"))
 				return
 			}
 
@@ -78,7 +85,7 @@ func (s *CommandService) ProcessCommand(clientServiceCtx context.Context) {
 
 			case CmdJoin:
 				if len(args) < 1 {
-					log.Println("Usage: /join <room_id>")
+					s.notifier.Print(s.formatter.Warn("Usage: /join <room_id>"))
 					continue
 				}
 				s.syncService.SubAndSyncUpdate(args[0])
@@ -91,12 +98,8 @@ func (s *CommandService) ProcessCommand(clientServiceCtx context.Context) {
 
 			default:
 				// If it's not a command, treat it as a clipboard update.
-				fmt.Println("Please enter the correct command")
-				fmt.Printf("to Create a room => \"%s\"\n", CmdCreate)
-				fmt.Printf("to Join a room => \"%s\" <room_id>\n", CmdJoin)
-				fmt.Printf("to Leave a room => \"%s\"\n", CmdLeave)
-				fmt.Printf("to Enable Sync => \"%s\"\n", CmdEnableSync)
-				fmt.Printf("to Disable Sync => \"%s\"\n", CmdDisableSync)
+				s.notifier.Print(s.formatter.Warn("Please enter the correct command"))
+				s.PrintAvailableCommand()
 			}
 
 		case <-clientServiceCtx.Done():
