@@ -62,6 +62,7 @@ func (c *clipboardGrpcClient) ReceiveUpdateAndSync(ctx context.Context, deviceId
 
 	stream, err := c.client.SubscribeClipboardContentUpdate(ctx, req)
 	if err != nil {
+		fmt.Println("error")
 		return err
 	}
 	c.terminalNotifier.Print(c.formatter.Success(fmt.Sprintf("Successfully Joined and Subscribed to room: %s", roomId)))
@@ -71,11 +72,13 @@ func (c *clipboardGrpcClient) ReceiveUpdateAndSync(ctx context.Context, deviceId
 
 		for {
 			resp, err := stream.Recv()
+			fmt.Println("recv worked")
 			if err == io.EOF {
 				log.Println("End of stream")
 				break
 			}
 			if err != nil {
+				log.Println("error in stream", err)
 				return
 			}
 
