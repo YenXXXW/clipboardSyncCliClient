@@ -258,6 +258,110 @@ func (x *CreateRoomResponse) GetRoomId() string {
 	return ""
 }
 
+type Validate struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Validate) Reset() {
+	*x = Validate{}
+	mi := &file_clipBoardSync_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Validate) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Validate) ProtoMessage() {}
+
+func (x *Validate) ProtoReflect() protoreflect.Message {
+	mi := &file_clipBoardSync_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Validate.ProtoReflect.Descriptor instead.
+func (*Validate) Descriptor() ([]byte, []int) {
+	return file_clipBoardSync_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *Validate) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *Validate) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+type ValidateJoin struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ValidateRoom  *Validate              `protobuf:"bytes,1,opt,name=validate_room,json=validateRoom,proto3" json:"validate_room,omitempty"`
+	CheckClient   *Validate              `protobuf:"bytes,2,opt,name=check_client,json=checkClient,proto3" json:"check_client,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ValidateJoin) Reset() {
+	*x = ValidateJoin{}
+	mi := &file_clipBoardSync_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ValidateJoin) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ValidateJoin) ProtoMessage() {}
+
+func (x *ValidateJoin) ProtoReflect() protoreflect.Message {
+	mi := &file_clipBoardSync_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ValidateJoin.ProtoReflect.Descriptor instead.
+func (*ValidateJoin) Descriptor() ([]byte, []int) {
+	return file_clipBoardSync_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *ValidateJoin) GetValidateRoom() *Validate {
+	if x != nil {
+		return x.ValidateRoom
+	}
+	return nil
+}
+
+func (x *ValidateJoin) GetCheckClient() *Validate {
+	if x != nil {
+		return x.CheckClient
+	}
+	return nil
+}
+
 type LeaveRoomRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	DeviceId      string                 `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
@@ -268,7 +372,7 @@ type LeaveRoomRequest struct {
 
 func (x *LeaveRoomRequest) Reset() {
 	*x = LeaveRoomRequest{}
-	mi := &file_clipBoardSync_proto_msgTypes[5]
+	mi := &file_clipBoardSync_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -280,7 +384,7 @@ func (x *LeaveRoomRequest) String() string {
 func (*LeaveRoomRequest) ProtoMessage() {}
 
 func (x *LeaveRoomRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_clipBoardSync_proto_msgTypes[5]
+	mi := &file_clipBoardSync_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -293,7 +397,7 @@ func (x *LeaveRoomRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LeaveRoomRequest.ProtoReflect.Descriptor instead.
 func (*LeaveRoomRequest) Descriptor() ([]byte, []int) {
-	return file_clipBoardSync_proto_rawDescGZIP(), []int{5}
+	return file_clipBoardSync_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *LeaveRoomRequest) GetDeviceId() string {
@@ -309,6 +413,88 @@ func (x *LeaveRoomRequest) GetRoomId() string {
 	}
 	return ""
 }
+
+type UpdateEvent struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Event:
+	//
+	//	*UpdateEvent_ClipboardUpdate
+	//	*UpdateEvent_ValidateJoin
+	Event         isUpdateEvent_Event `protobuf_oneof:"event"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateEvent) Reset() {
+	*x = UpdateEvent{}
+	mi := &file_clipBoardSync_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateEvent) ProtoMessage() {}
+
+func (x *UpdateEvent) ProtoReflect() protoreflect.Message {
+	mi := &file_clipBoardSync_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateEvent.ProtoReflect.Descriptor instead.
+func (*UpdateEvent) Descriptor() ([]byte, []int) {
+	return file_clipBoardSync_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *UpdateEvent) GetEvent() isUpdateEvent_Event {
+	if x != nil {
+		return x.Event
+	}
+	return nil
+}
+
+func (x *UpdateEvent) GetClipboardUpdate() *ClipboardUpdate {
+	if x != nil {
+		if x, ok := x.Event.(*UpdateEvent_ClipboardUpdate); ok {
+			return x.ClipboardUpdate
+		}
+	}
+	return nil
+}
+
+func (x *UpdateEvent) GetValidateJoin() *ValidateJoin {
+	if x != nil {
+		if x, ok := x.Event.(*UpdateEvent_ValidateJoin); ok {
+			return x.ValidateJoin
+		}
+	}
+	return nil
+}
+
+type isUpdateEvent_Event interface {
+	isUpdateEvent_Event()
+}
+
+type UpdateEvent_ClipboardUpdate struct {
+	ClipboardUpdate *ClipboardUpdate `protobuf:"bytes,1,opt,name=clipboard_update,json=clipboardUpdate,proto3,oneof"`
+}
+
+type UpdateEvent_ValidateJoin struct {
+	ValidateJoin *ValidateJoin `protobuf:"bytes,2,opt,name=validate_join,json=validateJoin,proto3,oneof"`
+}
+
+func (*UpdateEvent_ClipboardUpdate) isUpdateEvent_Event() {}
+
+func (*UpdateEvent_ValidateJoin) isUpdateEvent_Event() {}
 
 var File_clipBoardSync_proto protoreflect.FileDescriptor
 
@@ -326,16 +512,26 @@ const file_clipBoardSync_proto_rawDesc = "" +
 	"\x11CreateRoomRequest\x12\x1b\n" +
 	"\tdevice_id\x18\x01 \x01(\tR\bdeviceId\"-\n" +
 	"\x12CreateRoomResponse\x12\x17\n" +
-	"\aroom_id\x18\x01 \x01(\tR\x06roomId\"H\n" +
+	"\aroom_id\x18\x01 \x01(\tR\x06roomId\">\n" +
+	"\bValidate\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"l\n" +
+	"\fValidateJoin\x12.\n" +
+	"\rvalidate_room\x18\x01 \x01(\v2\t.ValidateR\fvalidateRoom\x12,\n" +
+	"\fcheck_client\x18\x02 \x01(\v2\t.ValidateR\vcheckClient\"H\n" +
 	"\x10LeaveRoomRequest\x12\x1b\n" +
 	"\tdevice_id\x18\x01 \x01(\tR\bdeviceId\x12\x17\n" +
-	"\aroom_id\x18\x02 \x01(\tR\x06roomId2\x8b\x02\n" +
+	"\aroom_id\x18\x02 \x01(\tR\x06roomId\"\x8b\x01\n" +
+	"\vUpdateEvent\x12=\n" +
+	"\x10clipboard_update\x18\x01 \x01(\v2\x10.ClipboardUpdateH\x00R\x0fclipboardUpdate\x124\n" +
+	"\rvalidate_join\x18\x02 \x01(\v2\r.ValidateJoinH\x00R\fvalidateJoinB\a\n" +
+	"\x05event2\x87\x02\n" +
 	"\x0fClipSyncService\x125\n" +
 	"\n" +
 	"CreateRoom\x12\x12.CreateRoomRequest\x1a\x13.CreateRoomResponse\x126\n" +
-	"\tLeaveRoom\x12\x11.LeaveRoomRequest\x1a\x16.google.protobuf.Empty\x12H\n" +
-	"\x1fSubscribeClipboardContentUpdate\x12\x11.SubscribeRequest\x1a\x10.ClipboardUpdate0\x01\x12?\n" +
-	"\x13sendClipboardUpdate\x12\x10.ClipboardUpdate\x1a\x16.google.protobuf.EmptyB\"Z github.com/YenXXXW/clipboardSyncb\x06proto3"
+	"\tLeaveRoom\x12\x11.LeaveRoomRequest\x1a\x16.google.protobuf.Empty\x12D\n" +
+	"\x1fSubscribeClipboardContentUpdate\x12\x11.SubscribeRequest\x1a\f.UpdateEvent0\x01\x12?\n" +
+	"\x13SendClipboardUpdate\x12\x10.ClipboardUpdate\x1a\x16.google.protobuf.EmptyB\"Z github.com/YenXXXW/clipboardSyncb\x06proto3"
 
 var (
 	file_clipBoardSync_proto_rawDescOnce sync.Once
@@ -349,31 +545,38 @@ func file_clipBoardSync_proto_rawDescGZIP() []byte {
 	return file_clipBoardSync_proto_rawDescData
 }
 
-var file_clipBoardSync_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_clipBoardSync_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_clipBoardSync_proto_goTypes = []any{
 	(*ClipboardContent)(nil),   // 0: ClipboardContent
 	(*ClipboardUpdate)(nil),    // 1: ClipboardUpdate
 	(*SubscribeRequest)(nil),   // 2: SubscribeRequest
 	(*CreateRoomRequest)(nil),  // 3: CreateRoomRequest
 	(*CreateRoomResponse)(nil), // 4: CreateRoomResponse
-	(*LeaveRoomRequest)(nil),   // 5: LeaveRoomRequest
-	(*emptypb.Empty)(nil),      // 6: google.protobuf.Empty
+	(*Validate)(nil),           // 5: Validate
+	(*ValidateJoin)(nil),       // 6: ValidateJoin
+	(*LeaveRoomRequest)(nil),   // 7: LeaveRoomRequest
+	(*UpdateEvent)(nil),        // 8: UpdateEvent
+	(*emptypb.Empty)(nil),      // 9: google.protobuf.Empty
 }
 var file_clipBoardSync_proto_depIdxs = []int32{
 	0, // 0: ClipboardUpdate.content:type_name -> ClipboardContent
-	3, // 1: ClipSyncService.CreateRoom:input_type -> CreateRoomRequest
-	5, // 2: ClipSyncService.LeaveRoom:input_type -> LeaveRoomRequest
-	2, // 3: ClipSyncService.SubscribeClipboardContentUpdate:input_type -> SubscribeRequest
-	1, // 4: ClipSyncService.sendClipboardUpdate:input_type -> ClipboardUpdate
-	4, // 5: ClipSyncService.CreateRoom:output_type -> CreateRoomResponse
-	6, // 6: ClipSyncService.LeaveRoom:output_type -> google.protobuf.Empty
-	1, // 7: ClipSyncService.SubscribeClipboardContentUpdate:output_type -> ClipboardUpdate
-	6, // 8: ClipSyncService.sendClipboardUpdate:output_type -> google.protobuf.Empty
-	5, // [5:9] is the sub-list for method output_type
-	1, // [1:5] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	5, // 1: ValidateJoin.validate_room:type_name -> Validate
+	5, // 2: ValidateJoin.check_client:type_name -> Validate
+	1, // 3: UpdateEvent.clipboard_update:type_name -> ClipboardUpdate
+	6, // 4: UpdateEvent.validate_join:type_name -> ValidateJoin
+	3, // 5: ClipSyncService.CreateRoom:input_type -> CreateRoomRequest
+	7, // 6: ClipSyncService.LeaveRoom:input_type -> LeaveRoomRequest
+	2, // 7: ClipSyncService.SubscribeClipboardContentUpdate:input_type -> SubscribeRequest
+	1, // 8: ClipSyncService.SendClipboardUpdate:input_type -> ClipboardUpdate
+	4, // 9: ClipSyncService.CreateRoom:output_type -> CreateRoomResponse
+	9, // 10: ClipSyncService.LeaveRoom:output_type -> google.protobuf.Empty
+	8, // 11: ClipSyncService.SubscribeClipboardContentUpdate:output_type -> UpdateEvent
+	9, // 12: ClipSyncService.SendClipboardUpdate:output_type -> google.protobuf.Empty
+	9, // [9:13] is the sub-list for method output_type
+	5, // [5:9] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_clipBoardSync_proto_init() }
@@ -381,13 +584,17 @@ func file_clipBoardSync_proto_init() {
 	if File_clipBoardSync_proto != nil {
 		return
 	}
+	file_clipBoardSync_proto_msgTypes[8].OneofWrappers = []any{
+		(*UpdateEvent_ClipboardUpdate)(nil),
+		(*UpdateEvent_ValidateJoin)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_clipBoardSync_proto_rawDesc), len(file_clipBoardSync_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

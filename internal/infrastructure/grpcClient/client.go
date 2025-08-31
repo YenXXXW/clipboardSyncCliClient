@@ -72,7 +72,6 @@ func (c *clipboardGrpcClient) ReceiveUpdateAndSync(ctx context.Context, deviceId
 
 		for {
 			resp, err := stream.Recv()
-			fmt.Println("recv worked")
 			if err == io.EOF {
 				log.Println("End of stream")
 				break
@@ -82,20 +81,38 @@ func (c *clipboardGrpcClient) ReceiveUpdateAndSync(ctx context.Context, deviceId
 				return
 			}
 
-			clipboardDataUpdate := &types.ClipboardUpdate{
-				DeviceId: resp.GetDeviceId(),
-				Content: &types.ClipboardContent{
-					Text: resp.GetContent().GetText(),
-				},
+			switch ev := resp.Event.(type) {
+
+			case *pb.UpdateEvent_ValidateJoin:
+				if !ev.ValidateJoin.ValidateRoom.Success {
+					c.terminalNotifier.Print(c.formatter.Error(ev.ValidateJoin.ValidateRoom.Message))
+					return
+				}
+
+				if !ev.ValidateJoin.CheckClient.Success {
+					c.terminalNotifier.Print(c.formatter.Error(ev.ValidateJoin.CheckClient.Message))
+					return
+				}
+
+			case *pb.UpdateEvent_ClipboardUpdate:
+
+				clipboardDataUpdate := &types.ClipboardUpdate{
+					DeviceId: ev.ClipboardUpdate.GetDeviceId(),
+					Content: &types.ClipboardContent{
+						Text: ev.ClipboardUpdate.GetContent().GetText(),
+					},
+				}
+
+				select {
+				case updateChan <- clipboardDataUpdate:
+				case <-ctx.Done():
+					log.Println("Context cancelled while sending update")
+					return
+
+				}
+
 			}
 
-			select {
-			case updateChan <- clipboardDataUpdate:
-			case <-ctx.Done():
-				log.Println("Context cancelled while sending update")
-				return
-
-			}
 		}
 	}()
 
