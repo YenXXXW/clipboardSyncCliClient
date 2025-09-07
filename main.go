@@ -41,11 +41,11 @@ func main() {
 	terminalNotifier := notifier.NewTerminalNotifiter()
 	formatter := formatter.NewFormatter()
 	userCliInputChan := make(chan string, 100)
-	grpcCleint := infrastructure.NewGrpcClient(os.Getenv("SERVER_ADDR"), terminalNotifier, formatter)
+	grpcClient := infrastructure.NewGrpcClient(os.Getenv("SERVER_ADDR"), terminalNotifier, formatter)
 	cliClient := cliCleint.NewCliClient()
 
 	//update chan to send data between syncService and clipService
-	updatesFromServerChan := make(chan *types.ClipboardUpdate, 100)
+	updatesFromServerChan := make(chan *types.UpdateEvent, 100)
 	localUpdatesChan := make(chan string, 100)
 
 	defer close(updatesFromServerChan)
@@ -58,7 +58,7 @@ func main() {
 
 	clipService := clipboardService.NewClipSyncService(deviceId, clipxClient, localUpdatesChan, localClipUpdatesChan)
 	go clipService.RecieveUpdatesFromClipboardClient(clientServiceCtx)
-	syncService := syncservice.NewSyncService(formatter, terminalNotifier, deviceId, "", clipService, grpcCleint, updatesFromServerChan, localUpdatesChan)
+	syncService := syncservice.NewSyncService(formatter, terminalNotifier, deviceId, "", clipService, grpcClient, updatesFromServerChan, localUpdatesChan)
 
 	commandService := command.NewCommandService(userCliInputChan, syncService, clipService, formatter, terminalNotifier)
 

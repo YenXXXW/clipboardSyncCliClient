@@ -53,7 +53,7 @@ func (c *clipboardGrpcClient) SendUpdate(ctx context.Context, deviceId, content 
 
 }
 
-func (c *clipboardGrpcClient) ReceiveUpdateAndSync(ctx context.Context, deviceId, roomId string, updateChan chan *types.ClipboardUpdate) error {
+func (c *clipboardGrpcClient) ReceiveUpdateAndSync(ctx context.Context, deviceId, roomId string, updateChan chan *types.UpdateEvent) error {
 
 	req := &pb.SubscribeRequest{
 		DeviceId: deviceId,
@@ -81,19 +81,25 @@ func (c *clipboardGrpcClient) ReceiveUpdateAndSync(ctx context.Context, deviceId
 				return
 			}
 
+			var UpdateEvent types.UpdateEvent
+
 			switch ev := resp.Event.(type) {
 
 			case *pb.UpdateEvent_ValidateJoin:
-				if !ev.ValidateJoin.ValidateRoom.Success {
-					c.terminalNotifier.Print(c.formatter.Error(ev.ValidateJoin.ValidateRoom.Message))
-					return
+
+				ValidateJoin := &types.ValidateJoin{
+					ValidateRoom: types.Validate{
+						Success: ev.ValidateJoin.ValidateRoom.Success,
+						Message: ev.ValidateJoin.ValidateRoom.Message,
+					},
+					CheckClient: types.Validate{
+						Success: ev.ValidateJoin.CheckClient.Success,
+						Message: ev.ValidateJoin.CheckClient.Message,
+					},
 				}
 
-				if !ev.ValidateJoin.CheckClient.Success {
-					c.terminalNotifier.Print(c.formatter.Error(ev.ValidateJoin.CheckClient.Message))
-					return
-				}
-
+				UpdateEvent.ValidateJoin = ValidateJoin
+				fmt.Println("prepated UpdateEvent", UpdateEvent)
 			case *pb.UpdateEvent_ClipboardUpdate:
 
 				clipboardDataUpdate := &types.ClipboardUpdate{
@@ -103,13 +109,16 @@ func (c *clipboardGrpcClient) ReceiveUpdateAndSync(ctx context.Context, deviceId
 					},
 				}
 
-				select {
-				case updateChan <- clipboardDataUpdate:
-				case <-ctx.Done():
-					log.Println("Context cancelled while sending update")
-					return
+				UpdateEvent.ClipboardUpdate = clipboardDataUpdate
 
-				}
+			}
+
+			select {
+			case updateChan <- &UpdateEvent:
+				log.Println("receive update event", UpdateEvent)
+			case <-ctx.Done():
+				log.Println("Context cancelled while sending update")
+				return
 
 			}
 

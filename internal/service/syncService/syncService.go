@@ -17,11 +17,11 @@ type SyncService struct {
 	deviceId                  string
 	roomId                    string
 	cancelStream              context.CancelFunc
-	incomingUpdatesFromServer chan *types.ClipboardUpdate
+	incomingUpdatesFromServer chan *types.UpdateEvent
 	infoLogger                types.Notifier
 }
 
-func NewSyncService(formatter types.Formatter, infoLogger types.Notifier, deviceId, roomId string, clipboardService types.ClipService, syncClient types.SyncClient, incomingUpdatesFromServer chan *types.ClipboardUpdate, LocalUpdateChan chan string) *SyncService {
+func NewSyncService(formatter types.Formatter, infoLogger types.Notifier, deviceId, roomId string, clipboardService types.ClipService, syncClient types.SyncClient, incomingUpdatesFromServer chan *types.UpdateEvent, LocalUpdateChan chan string) *SyncService {
 	return &SyncService{
 		formatter:                 formatter,
 		infoLogger:                infoLogger,
@@ -108,23 +108,49 @@ func (c *SyncService) SubAndSyncUpdate(roomId string) error {
 	streamCtx, cancel := context.WithCancel(context.Background())
 	c.cancelStream = cancel
 
+	validatedAlready := false
+
 	go func() {
 		for {
 			select {
 			case <-streamCtx.Done():
 				return
-			case update, ok := <-c.incomingUpdatesFromServer:
+			case updateEvent, ok := <-c.incomingUpdatesFromServer:
 				if !ok {
+					fmt.Println("it is not okay")
 					return
 				}
+
+				fmt.Println("updateEvent Sent from server", updateEvent)
+
+				if updateEvent.ValidateJoin == nil {
+					// only perform the the below opreation once for the first response from the server
+					update := updateEvent.ClipboardUpdate
+
+					c.clipboardService.ProcessUpdates(update)
+				} else {
+					fmt.Println("validateJoin", updateEvent.ValidateJoin)
+					validateResult := updateEvent.ValidateJoin
+					if !validateResult.ValidateRoom.Success {
+						c.infoLogger.Print(c.formatter.Error(validateResult.ValidateRoom.Message))
+						return
+					} else if !validateResult.CheckClient.Success {
+						c.infoLogger.Print(c.formatter.Error(validateResult.CheckClient.Message))
+						return
+					} else {
+						if !validatedAlready {
+							c.roomId = roomId
+							c.clipboardService.ToggleSyncEnable(true)
+							validatedAlready = true
+						}
+					}
+
+				}
+
 				// Process the updates from the incomingudpates channel sent by grpc client and apply it to the clipboard
-				c.clipboardService.ProcessUpdates(update)
 			}
 		}
 	}()
-
-	c.clipboardService.ToggleSyncEnable(true)
-	c.roomId = roomId
 
 	if err := c.syncClient.ReceiveUpdateAndSync(streamCtx, c.deviceId, roomId, c.incomingUpdatesFromServer); err != nil {
 		c.infoLogger.Print(c.formatter.Error(fmt.Sprintf("failed to subscribe to updates: %v", err)))

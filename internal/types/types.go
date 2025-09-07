@@ -43,7 +43,7 @@ type CliClient interface {
 // intface defince by sync service for sync client to be implemented
 type SyncClient interface {
 	SendUpdate(context.Context, string, string) error
-	ReceiveUpdateAndSync(context.Context, string, string, chan *ClipboardUpdate) error
+	ReceiveUpdateAndSync(context.Context, string, string, chan *UpdateEvent) error
 	LeaveRoom(context.Context, string, string) error
 	CreateRoom(context.Context, string) (string, error)
 }
