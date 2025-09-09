@@ -2,7 +2,6 @@ package syncservice
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -99,12 +98,6 @@ func (s *SyncService) LeaveRoom() {
 }
 
 func (c *SyncService) SubAndSyncUpdate(roomId string) error {
-	if c.roomId != "" {
-
-		c.infoLogger.Print(c.formatter.Error("You are already in a room. Please leave it before joining another."))
-		return errors.New("Already in a room")
-
-	}
 	streamCtx, cancel := context.WithCancel(context.Background())
 	c.cancelStream = cancel
 
@@ -117,11 +110,8 @@ func (c *SyncService) SubAndSyncUpdate(roomId string) error {
 				return
 			case updateEvent, ok := <-c.incomingUpdatesFromServer:
 				if !ok {
-					fmt.Println("it is not okay")
 					return
 				}
-
-				fmt.Println("updateEvent Sent from server", updateEvent)
 
 				if updateEvent.ValidateJoin == nil {
 					// only perform the the below opreation once for the first response from the server
@@ -129,7 +119,6 @@ func (c *SyncService) SubAndSyncUpdate(roomId string) error {
 
 					c.clipboardService.ProcessUpdates(update)
 				} else {
-					fmt.Println("validateJoin", updateEvent.ValidateJoin)
 					validateResult := updateEvent.ValidateJoin
 					if !validateResult.ValidateRoom.Success {
 						c.infoLogger.Print(c.formatter.Error(validateResult.ValidateRoom.Message))

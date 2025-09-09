@@ -77,7 +77,6 @@ func (c *clipboardGrpcClient) ReceiveUpdateAndSync(ctx context.Context, deviceId
 				break
 			}
 			if err != nil {
-				log.Println("error in stream", err)
 				return
 			}
 
@@ -99,7 +98,6 @@ func (c *clipboardGrpcClient) ReceiveUpdateAndSync(ctx context.Context, deviceId
 				}
 
 				UpdateEvent.ValidateJoin = ValidateJoin
-				fmt.Println("prepated UpdateEvent", UpdateEvent)
 			case *pb.UpdateEvent_ClipboardUpdate:
 
 				clipboardDataUpdate := &types.ClipboardUpdate{
@@ -115,9 +113,7 @@ func (c *clipboardGrpcClient) ReceiveUpdateAndSync(ctx context.Context, deviceId
 
 			select {
 			case updateChan <- &UpdateEvent:
-				log.Println("receive update event", UpdateEvent)
 			case <-ctx.Done():
-				log.Println("Context cancelled while sending update")
 				return
 
 			}
