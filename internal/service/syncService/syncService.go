@@ -33,6 +33,7 @@ func NewSyncService(formatter types.Formatter, infoLogger types.Notifier, device
 	}
 }
 
+// INFO: Fuction to receive the updates from the local updates channel
 func (s *SyncService) SendUpdate(clientServiceCtx context.Context) {
 	for {
 		select {
@@ -150,4 +151,8 @@ func (c *SyncService) SubAndSyncUpdate(roomId string) error {
 	}
 
 	return nil
+}
+
+func (c *SyncService) GetRoomId() string {
+	return c.roomId
 }

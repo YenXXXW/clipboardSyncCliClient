@@ -17,8 +17,12 @@ type Notifier interface {
 	Print(msg string)
 }
 
-type ClipSyncService interface {
-	SendUpdate(context.Context, string) error
+type SyncService interface {
+	SendUpdate(context.Context)
+	LeaveRoom()
+	CreateRoom()
+	SubAndSyncUpdate(string) error
+	GetRoomId() string
 }
 
 type Formatter interface {

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	syncservice "github.com/YenXXXW/clipboardSyncCliClient/internal/service/syncService"
 	"github.com/YenXXXW/clipboardSyncCliClient/internal/types"
 )
 
@@ -14,12 +13,12 @@ type CommandService struct {
 	notifier    types.Notifier
 	formatter   types.Formatter
 	clipService types.ClipService
-	syncService *syncservice.SyncService
+	syncService types.SyncService
 	input       chan string
 }
 
 // NewCommandService creates a new CommandService.
-func NewCommandService(input chan string, syncService *syncservice.SyncService, clipService types.ClipService, formatter types.Formatter, notifier types.Notifier) *CommandService {
+func NewCommandService(input chan string, syncService types.SyncService, clipService types.ClipService, formatter types.Formatter, notifier types.Notifier) *CommandService {
 	return &CommandService{
 		formatter:   formatter,
 		notifier:    notifier,
@@ -82,6 +81,7 @@ func (s *CommandService) ProcessCommand(clientServiceCtx context.Context) {
 
 			case CmdLeave:
 				s.syncService.LeaveRoom()
+				s.clipService.ToggleSyncEnable(false)
 
 			case CmdJoin:
 				if len(args) < 1 {
@@ -91,9 +91,18 @@ func (s *CommandService) ProcessCommand(clientServiceCtx context.Context) {
 				s.syncService.SubAndSyncUpdate(args[0])
 
 			case CmdEnableSync:
+				if roomID := s.syncService.GetRoomId(); roomID == "" {
+					s.notifier.Print(s.formatter.Warn("Sync can be enabled only after joining a room"))
+					continue
+				}
+
 				s.clipService.ToggleSyncEnable(true)
 
 			case CmdDisableSync:
+				if roomID := s.syncService.GetRoomId(); roomID == "" {
+					s.notifier.Print(s.formatter.Warn("Please Join a room first"))
+					continue
+				}
 				s.clipService.ToggleSyncEnable(false)
 
 			default:
