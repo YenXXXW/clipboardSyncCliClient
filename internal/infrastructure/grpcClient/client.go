@@ -65,7 +65,7 @@ func (c *clipboardGrpcClient) ReceiveUpdateAndSync(ctx context.Context, deviceId
 		fmt.Println("error")
 		return err
 	}
-	c.terminalNotifier.Print(c.formatter.Success(fmt.Sprintf("Successfully Joined and Subscribed to room: %s", roomId)))
+	//c.terminalNotifier.Print(c.formatter.Success(fmt.Sprintf("Successfully Joined and Subscribed to room: %s", roomId)))
 
 	go func() {
 		//defer close(updateChan)

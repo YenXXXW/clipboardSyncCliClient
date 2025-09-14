@@ -131,10 +131,10 @@ func (c *SyncService) SubAndSyncUpdate(roomId string) error {
 						if !validatedAlready {
 							c.roomId = roomId
 							c.clipboardService.ToggleSyncEnable(true)
+							c.infoLogger.Print(c.formatter.Info("Successfully Joined the room"))
 							validatedAlready = true
 						}
 					}
-
 				}
 
 				// Process the updates from the incomingudpates channel sent by grpc client and apply it to the clipboard
