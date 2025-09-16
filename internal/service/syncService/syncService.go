@@ -125,8 +125,15 @@ func (c *SyncService) SubAndSyncUpdate(roomId string) error {
 						c.infoLogger.Print(c.formatter.Error(validateResult.ValidateRoom.Message))
 						return
 					} else if !validateResult.CheckClient.Success {
-						c.infoLogger.Print(c.formatter.Error(validateResult.CheckClient.Message))
+						message := validateResult.CheckClient.Message
+						fmt.Println(message)
+						if message == "Client is in a room" {
+							message = "Please leave the room first to join to another room"
+						}
+						c.infoLogger.Print(c.formatter.Error(message))
 						return
+					} else if validateResult.CheckClient.Success && validateResult.CheckClient.Message == "You are already in the target room" {
+						c.infoLogger.Print(c.formatter.Warn(validateResult.CheckClient.Message))
 					} else {
 						if !validatedAlready {
 							c.roomId = roomId
