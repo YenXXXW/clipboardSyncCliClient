@@ -54,7 +54,7 @@ func main() {
 	//channel to send the data between the clipx infra and clipService
 	localClipUpdatesChan := make(chan string, 100)
 
-	clipxClient := clipxClient.NewClipxInfra(deviceId, localClipUpdatesChan)
+	clipxClient := clipxClient.NewClipxInfra(deviceId, terminalNotifier, formatter, localClipUpdatesChan)
 
 	clipService := clipboardService.NewClipSyncService(deviceId, clipxClient, localUpdatesChan, localClipUpdatesChan)
 	go clipService.RecieveUpdatesFromClipboardClient(clientServiceCtx)

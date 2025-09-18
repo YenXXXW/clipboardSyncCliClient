@@ -62,7 +62,6 @@ func (s *CliClient) Run(clientServiceCtx context.Context, input chan<- string) {
 				return
 			case line, ok := <-rlChan:
 				if !ok {
-					fmt.Println("Error reading the user input")
 					return
 				}
 				input <- line
